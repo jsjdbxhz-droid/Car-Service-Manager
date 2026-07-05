@@ -79,7 +79,7 @@ export default function Login() {
         </form>
 
         <div className="mt-6 text-center">
-          <Link href="/" className="text-base font-medium text-primary hover:underline">
+          <Link href="/register" className="text-base font-medium text-primary hover:underline">
             {t('auth.no_account')}
           </Link>
         </div>
