@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { setAuthTokenGetter } from '@workspace/api-client-react';
 
 export type UserRole = 'user' | 'admin' | 'owner';
@@ -13,7 +13,7 @@ export interface UserSession {
 
 interface AuthContextType {
   session: UserSession | null;
-  originalSession: UserSession | null; // set when impersonating
+  originalSession: UserSession | null;
   deviceId: string;
   login: (session: UserSession) => void;
   logout: () => void;
@@ -22,6 +22,9 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isOwner: boolean;
   isImpersonating: boolean;
+  // Gateway
+  isGatewayPassed: boolean;
+  passGateway: (revision: number) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,11 +32,17 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const AUTH_KEY = 'garage_auth';
 const ORIGINAL_AUTH_KEY = 'garage_auth_original';
 const DEVICE_KEY = 'garage_device_id';
+const GATEWAY_KEY = 'garage_gateway_rev';
+
+function getApiBase() {
+  return ((import.meta.env.BASE_URL as string | undefined) ?? '').replace(/\/$/, '');
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<UserSession | null>(null);
   const [originalSession, setOriginalSession] = useState<UserSession | null>(null);
   const [deviceId, setDeviceId] = useState<string>('');
+  const [gatewayRevision, setGatewayRevision] = useState<number | null>(null);
 
   useEffect(() => {
     let currentDeviceId = localStorage.getItem(DEVICE_KEY);
@@ -45,22 +54,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const storedAuth = localStorage.getItem(AUTH_KEY);
     if (storedAuth) {
-      try { setSession(JSON.parse(storedAuth)); } catch {}
+      try { setSession(JSON.parse(storedAuth) as UserSession); } catch {}
     }
     const storedOriginal = localStorage.getItem(ORIGINAL_AUTH_KEY);
     if (storedOriginal) {
-      try { setOriginalSession(JSON.parse(storedOriginal)); } catch {}
+      try { setOriginalSession(JSON.parse(storedOriginal) as UserSession); } catch {}
     }
+
+    const storedRev = localStorage.getItem(GATEWAY_KEY);
+    if (storedRev) setGatewayRevision(Number(storedRev));
   }, []);
 
   useEffect(() => {
     setAuthTokenGetter(() => {
       try {
         const s = localStorage.getItem(AUTH_KEY);
-        return s ? JSON.parse(s).token : null;
+        return s ? (JSON.parse(s) as UserSession).token : null;
       } catch { return null; }
     });
   }, []);
+
+  // Check if the stored gateway revision still matches the server's current revision.
+  // Called on tab focus / visibility change — if the owner changed the code, users are auto-logged out of the gateway.
+  const checkRevision = useCallback(async () => {
+    const stored = localStorage.getItem(GATEWAY_KEY);
+    if (!stored) return;
+    try {
+      const res = await fetch(`${getApiBase()}/api/config/session-revision`);
+      if (!res.ok) return;
+      const data = (await res.json()) as { revision: number };
+      if (data.revision !== Number(stored)) {
+        localStorage.removeItem(GATEWAY_KEY);
+        setGatewayRevision(null);
+      }
+    } catch { /* network error — keep current state */ }
+  }, []);
+
+  useEffect(() => {
+    const onVisibility = () => { if (document.visibilityState === 'visible') void checkRevision(); };
+    const onFocus = () => void checkRevision();
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('focus', onFocus);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [checkRevision]);
+
+  const passGateway = (revision: number) => {
+    localStorage.setItem(GATEWAY_KEY, String(revision));
+    setGatewayRevision(revision);
+  };
 
   const login = (newSession: UserSession) => {
     localStorage.setItem(AUTH_KEY, JSON.stringify(newSession));
@@ -74,7 +118,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setOriginalSession(null);
   };
 
-  // Owner enters another user's account
   const impersonate = (targetSession: UserSession) => {
     const current = session;
     if (current) {
@@ -85,7 +128,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSession(targetSession);
   };
 
-  // Return to owner account
   const exitImpersonation = () => {
     if (originalSession) {
       localStorage.setItem(AUTH_KEY, JSON.stringify(originalSession));
@@ -113,6 +155,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: !!session,
         isOwner,
         isImpersonating: !!originalSession,
+        isGatewayPassed: gatewayRevision !== null,
+        passGateway,
       }}
     >
       {children}

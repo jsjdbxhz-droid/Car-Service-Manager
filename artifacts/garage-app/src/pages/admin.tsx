@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import {
   useAdminListUsers,
@@ -12,13 +12,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, LogIn, Users, FileText, Copy, Check } from 'lucide-react';
+import { Search, LogIn, Users, FileText, Copy, Check, Lock, Eye, EyeOff, AlertTriangle, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-// Helper: call the impersonate endpoint directly (not in codegen)
+function getApiBase() {
+  return ((import.meta.env.BASE_URL as string | undefined) ?? '').replace(/\/$/, '');
+}
+
 async function callImpersonate(userId: number, token: string) {
-  const basePath = (import.meta.env.BASE_URL as string | undefined)?.replace(/\/$/, '') ?? '';
-  const res = await fetch(`${basePath}/api/admin/users/${userId}/impersonate`, {
+  const res = await fetch(`${getApiBase()}/api/admin/users/${userId}/impersonate`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -29,6 +31,125 @@ async function callImpersonate(userId: number, token: string) {
   }>;
 }
 
+async function fetchConfig(token: string) {
+  const res = await fetch(`${getApiBase()}/api/config`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to fetch config');
+  return res.json() as Promise<{ accessCode: string; sessionRevision: number }>;
+}
+
+async function changeAccessCode(code: string, token: string) {
+  const res = await fetch(`${getApiBase()}/api/config/access-code`, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code }),
+  });
+  if (!res.ok) {
+    const data = (await res.json()) as { error?: string };
+    throw new Error(data.error ?? 'Failed to change code');
+  }
+  return res.json() as Promise<{ accessCode: string; sessionRevision: number }>;
+}
+
+// ── Access Code Card ─────────────────────────────────────────────────────────
+function AccessCodeCard() {
+  const { t } = useI18n();
+  const { session } = useAuth();
+  const { toast } = useToast();
+  const [currentCode, setCurrentCode] = useState('');
+  const [revealed, setRevealed] = useState(false);
+  const [newCode, setNewCode] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+
+  useEffect(() => {
+    if (!session?.token) return;
+    fetchConfig(session.token)
+      .then((cfg) => setCurrentCode(cfg.accessCode))
+      .catch(() => setLoadError(true));
+  }, [session?.token]);
+
+  const maskedCode = currentCode ? '•'.repeat(currentCode.length) : '------';
+
+  const handleChange = async () => {
+    if (!newCode.trim() || !session?.token) return;
+    setSaving(true);
+    try {
+      const updated = await changeAccessCode(newCode.trim(), session.token);
+      setCurrentCode(updated.accessCode);
+      setNewCode('');
+      setRevealed(false);
+      toast({ title: t('owner.access_code_changed') });
+    } catch (err) {
+      toast({ title: (err as Error).message, variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card className="shadow-sm border-amber-200 dark:border-amber-800/50">
+      <CardHeader className="pb-3 border-b border-amber-100 dark:border-amber-800/30">
+        <CardTitle className="text-base font-bold flex items-center gap-2">
+          <Lock className="w-4 h-4 text-amber-600" />
+          {t('owner.access_code')}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="pt-4 space-y-4">
+        {loadError ? (
+          <p className="text-sm text-slate-400">{t('msg.error')}</p>
+        ) : (
+          <>
+            {/* Current code */}
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-slate-500">{t('owner.access_code_current')}</span>
+              <span
+                className="font-mono text-lg font-bold tracking-widest text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg"
+                dir="ltr"
+              >
+                {revealed ? currentCode || '...' : maskedCode}
+              </span>
+              <button
+                onClick={() => setRevealed((r) => !r)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+              >
+                {revealed ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {/* Change code */}
+            <div className="flex gap-2">
+              <Input
+                value={newCode}
+                onChange={(e) => setNewCode(e.target.value.toUpperCase())}
+                placeholder={t('owner.access_code_placeholder')}
+                className="font-mono tracking-widest uppercase flex-1"
+                dir="ltr"
+                maxLength={16}
+              />
+              <Button
+                onClick={handleChange}
+                disabled={saving || newCode.trim().length < 4}
+                className="shrink-0"
+              >
+                {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : t('owner.access_code_save')}
+              </Button>
+            </div>
+
+            {/* Warning */}
+            <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 rounded-lg p-3 text-sm text-amber-800 dark:text-amber-300">
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              {t('owner.access_code_warning')}
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ── Main Panel ───────────────────────────────────────────────────────────────
 export default function OwnerPanel() {
   const { t } = useI18n();
   const { session, impersonate } = useAuth();
@@ -87,9 +208,12 @@ export default function OwnerPanel() {
     <div className="space-y-4">
       <h1 className="text-2xl font-black text-slate-900 dark:text-white">{t('owner.title')}</h1>
 
+      {/* Access Code Card */}
+      <AccessCodeCard />
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* ── Users list ── */}
-        <Card className="lg:col-span-1 shadow-sm flex flex-col h-[calc(100vh-160px)]">
+        <Card className="lg:col-span-1 shadow-sm flex flex-col h-[calc(100vh-320px)]">
           <CardHeader className="pb-3 border-b border-slate-100 dark:border-slate-800">
             <CardTitle className="text-base font-bold">{t('nav.records')}</CardTitle>
             <div className="relative mt-2">
@@ -127,7 +251,6 @@ export default function OwnerPanel() {
                         <p className="text-xs text-slate-400 mt-0.5">
                           {(user.role as string) === 'owner' || (user.role as string) === 'admin' ? '👑 أونر' : '👤 مستخدم'}
                         </p>
-                        {/* Login code with copy */}
                         <div className="flex items-center gap-1.5 mt-1">
                           <span className="font-mono text-xs text-slate-500 dark:text-slate-400 tracking-wider" dir="ltr">
                             {user.loginCode}
@@ -147,7 +270,7 @@ export default function OwnerPanel() {
                         size="sm"
                         variant="outline"
                         className="h-7 px-2 text-xs shrink-0"
-                        onClick={(e) => { e.stopPropagation(); handleImpersonate(user.id); }}
+                        onClick={(e) => { e.stopPropagation(); void handleImpersonate(user.id); }}
                       >
                         <LogIn className="w-3 h-3 me-1" />
                         {t('owner.enter_as')}
@@ -164,7 +287,6 @@ export default function OwnerPanel() {
         <div className="lg:col-span-2 flex flex-col gap-4">
           {selectedUser ? (
             <>
-              {/* Tabs */}
               <div className="flex gap-2 items-center">
                 <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200 me-2">
                   {selectedUser.username}

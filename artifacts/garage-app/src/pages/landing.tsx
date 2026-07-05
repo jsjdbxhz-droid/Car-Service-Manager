@@ -1,21 +1,49 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { useI18n } from '@/contexts/i18n-context';
+import { useAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Wrench } from 'lucide-react';
+import { Wrench, AlertCircle, Loader2 } from 'lucide-react';
+
+function getApiBase() {
+  return ((import.meta.env.BASE_URL as string | undefined) ?? '').replace(/\/$/, '');
+}
 
 export default function Landing() {
   const [code, setCode] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [, setLocation] = useLocation();
   const { t } = useI18n();
+  const { passGateway } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (code === 'Z2013') {
-      setLocation('/download');
-    } else {
-      setLocation('/login');
+    if (!code.trim()) return;
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch(`${getApiBase()}/api/config/verify-access`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: code.trim() }),
+      });
+      const data = (await res.json()) as { ok?: boolean; revision?: number; error?: string };
+      if (!res.ok) {
+        if (res.status === 429) {
+          setError(t('auth.gateway_rate_limit'));
+        } else {
+          setError(t('auth.gateway_wrong_code'));
+        }
+      } else {
+        passGateway(data.revision!);
+        setLocation('/login');
+      }
+    } catch {
+      setError(t('msg.error'));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -27,36 +55,34 @@ export default function Landing() {
             <Wrench className="w-12 h-12 text-primary" />
           </div>
         </div>
-        
+
         <h1 className="text-3xl font-bold text-center mb-2 text-slate-900 dark:text-white">
           {t('auth.landing_title')}
         </h1>
         <p className="text-center text-slate-500 mb-8">
-          {t('auth.landing_subtitle')}
+          {t('auth.gateway_subtitle')}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Input 
-            type="text" 
-            placeholder={t('auth.enter_code')} 
+          <Input
+            type="text"
+            placeholder={t('auth.enter_code')}
             value={code}
-            onChange={(e) => setCode(e.target.value)}
-            className="text-center text-lg tracking-widest h-14"
+            onChange={(e) => { setCode(e.target.value); setError(''); }}
+            className="text-center text-xl tracking-widest h-14 uppercase"
             autoFocus
+            disabled={loading}
           />
-          <Button type="submit" className="w-full h-12 text-lg">
-            {t('auth.submit')}
+          {error && (
+            <div className="flex items-center gap-2 text-destructive text-sm bg-destructive/5 border border-destructive/20 rounded-lg p-3">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              {error}
+            </div>
+          )}
+          <Button type="submit" className="w-full h-12 text-lg" disabled={loading || !code.trim()}>
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('auth.submit')}
           </Button>
         </form>
-
-        <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4 flex flex-col items-center">
-          <Button variant="outline" className="w-full h-12" onClick={() => setLocation('/login')}>
-            {t('auth.or_login')}
-          </Button>
-          <Button variant="ghost" className="w-full" onClick={() => setLocation('/register')}>
-            {t('auth.register_new')}
-          </Button>
-        </div>
       </div>
     </div>
   );

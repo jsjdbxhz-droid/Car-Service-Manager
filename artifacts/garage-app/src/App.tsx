@@ -6,6 +6,10 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { AuthProvider, useAuth } from '@/contexts/auth-context';
 import { I18nProvider } from '@/contexts/i18n-context';
 
+// Register PWA install prompt listener early
+import '@/lib/pwa';
+
+import Landing from '@/pages/landing';
 import Login from '@/pages/login';
 import Register from '@/pages/register';
 import Download from '@/pages/download';
@@ -27,6 +31,19 @@ const queryClient = new QueryClient({
     queries: { retry: 1, refetchOnWindowFocus: false },
   },
 });
+
+// Gate: user must have passed the gateway (or already be authenticated)
+function GatewayRoute({ component: Component }: { component: React.ComponentType }) {
+  const { isGatewayPassed, isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (!isAuthenticated && !isGatewayPassed) setLocation('/');
+  }, [isAuthenticated, isGatewayPassed, setLocation]);
+
+  if (!isAuthenticated && !isGatewayPassed) return null;
+  return <Component />;
+}
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { isAuthenticated } = useAuth();
@@ -57,7 +74,7 @@ function Router() {
   const { isAuthenticated } = useAuth();
   const [location, setLocation] = useLocation();
 
-  // Authenticated users go straight to dashboard
+  // Authenticated users skip gateway and go straight to dashboard
   useEffect(() => {
     if (isAuthenticated && (location === '/' || location === '/login' || location === '/register')) {
       setLocation('/dashboard');
@@ -66,10 +83,13 @@ function Router() {
 
   return (
     <Switch>
-      {/* Default: register page */}
-      <Route path="/" component={Register} />
-      <Route path="/login" component={Login} />
-      <Route path="/register" component={Register} />
+      {/* Gateway entry point */}
+      <Route path="/" component={Landing} />
+
+      {/* Login / Register gated behind gateway */}
+      <Route path="/login"><GatewayRoute component={Login} /></Route>
+      <Route path="/register"><GatewayRoute component={Register} /></Route>
+
       <Route path="/download" component={Download} />
 
       <Route path="/dashboard"><ProtectedRoute component={Dashboard} /></Route>
