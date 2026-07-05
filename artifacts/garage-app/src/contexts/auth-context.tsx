@@ -39,30 +39,30 @@ function getApiBase() {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<UserSession | null>(null);
-  const [originalSession, setOriginalSession] = useState<UserSession | null>(null);
-  const [deviceId, setDeviceId] = useState<string>('');
-  const [gatewayRevision, setGatewayRevision] = useState<number | null>(null);
+  // Initialize synchronously from localStorage so the first render already has the correct values.
+  // This prevents the flash-redirect where GatewayRoute/ProtectedRoute redirects before state loads.
+  const [session, setSession] = useState<UserSession | null>(() => {
+    try { const s = localStorage.getItem(AUTH_KEY); return s ? JSON.parse(s) as UserSession : null; } catch { return null; }
+  });
+  const [originalSession, setOriginalSession] = useState<UserSession | null>(() => {
+    try { const s = localStorage.getItem(ORIGINAL_AUTH_KEY); return s ? JSON.parse(s) as UserSession : null; } catch { return null; }
+  });
+  const [deviceId, setDeviceId] = useState<string>(() => {
+    let id = localStorage.getItem(DEVICE_KEY);
+    if (!id) { id = crypto.randomUUID(); localStorage.setItem(DEVICE_KEY, id); }
+    return id;
+  });
+  const [gatewayRevision, setGatewayRevision] = useState<number | null>(() => {
+    const s = localStorage.getItem(GATEWAY_KEY);
+    return s ? Number(s) : null;
+  });
 
+  // Keep deviceId in sync if it ever changes (edge case: cleared externally)
   useEffect(() => {
-    let currentDeviceId = localStorage.getItem(DEVICE_KEY);
-    if (!currentDeviceId) {
-      currentDeviceId = crypto.randomUUID();
-      localStorage.setItem(DEVICE_KEY, currentDeviceId);
-    }
-    setDeviceId(currentDeviceId);
-
-    const storedAuth = localStorage.getItem(AUTH_KEY);
-    if (storedAuth) {
-      try { setSession(JSON.parse(storedAuth) as UserSession); } catch {}
-    }
-    const storedOriginal = localStorage.getItem(ORIGINAL_AUTH_KEY);
-    if (storedOriginal) {
-      try { setOriginalSession(JSON.parse(storedOriginal) as UserSession); } catch {}
-    }
-
-    const storedRev = localStorage.getItem(GATEWAY_KEY);
-    if (storedRev) setGatewayRevision(Number(storedRev));
+    let id = localStorage.getItem(DEVICE_KEY);
+    if (!id) { id = crypto.randomUUID(); localStorage.setItem(DEVICE_KEY, id); }
+    if (id !== deviceId) setDeviceId(id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
