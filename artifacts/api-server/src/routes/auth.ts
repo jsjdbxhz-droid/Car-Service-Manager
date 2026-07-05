@@ -58,11 +58,24 @@ router.post("/register", async (req, res) => {
     attempts++;
   }
 
-  const isOwner =
-    trimmed === "زكرياء" ||
-    trimmed.toLowerCase() === "zakariyaa" ||
-    trimmed.toLowerCase() === "zakariya";
-  const role = isOwner ? "owner" : "user";
+  // Owner bootstrap: only the first-ever registration with the owner username
+  // gets the owner role. Once an owner exists in the DB, no further self-promotion
+  // is possible through registration — any subsequent registrant gets "user".
+  const OWNER_USERNAMES = ["زكرياء", "zakariyaa", "zakariya"];
+  const isOwnerUsername = OWNER_USERNAMES.some(
+    (n) => n === trimmed || n === trimmed.toLowerCase(),
+  );
+  let role = "user";
+  if (isOwnerUsername) {
+    const [existingOwner] = await db
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(eq(usersTable.role, "owner"))
+      .limit(1);
+    if (!existingOwner) {
+      role = "owner";
+    }
+  }
 
   const [user] = await db
     .insert(usersTable)
