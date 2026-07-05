@@ -1,0 +1,2 @@
+- [GarageManager auth](garage-auth.md) — HMAC-signed token (userId.hmac) using SESSION_SECRET; admin auto-assigned to username "زكرياء"; loginCode masked in admin list.
+- [GarageManager i18n](garage-i18n.md) — AR/EN/FR via React context; RTL set on html element for Arabic; language switcher in navbar.

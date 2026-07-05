@@ -3,20 +3,27 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Garage Management API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: records
+    description: Customer records
+  - name: invoices
+    description: Invoices
+  - name: admin
+    description: Admin operations
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +31,337 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "409":
+          description: Username taken
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid code
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: OK
+
+  /records:
+    get:
+      operationId: listRecords
+      tags: [records]
+      summary: List records with optional search
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: deviceId
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CustomerRecord"
+    post:
+      operationId: createRecord
+      tags: [records]
+      summary: Create a record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerRecord"
+
+  /records/{id}:
+    get:
+      operationId: getRecord
+      tags: [records]
+      summary: Get a record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerRecord"
+    put:
+      operationId: updateRecord
+      tags: [records]
+      summary: Update a record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerRecord"
+    delete:
+      operationId: deleteRecord
+      tags: [records]
+      summary: Delete a record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /invoices:
+    get:
+      operationId: listInvoices
+      tags: [invoices]
+      summary: List invoices with optional search
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: deviceId
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Invoice"
+    post:
+      operationId: createInvoice
+      tags: [invoices]
+      summary: Create an invoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvoiceInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  /invoices/{id}:
+    get:
+      operationId: getInvoice
+      tags: [invoices]
+      summary: Get an invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+    put:
+      operationId: updateInvoice
+      tags: [invoices]
+      summary: Update an invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvoiceUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+    delete:
+      operationId: deleteInvoice
+      tags: [invoices]
+      summary: Delete an invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /admin/users:
+    get:
+      operationId: adminListUsers
+      tags: [admin]
+      summary: Admin - list all users
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+        "403":
+          description: Forbidden
+
+  /admin/users/{id}/records:
+    get:
+      operationId: adminGetUserRecords
+      tags: [admin]
+      summary: Admin - get user records
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CustomerRecord"
+
+  /admin/users/{id}/invoices:
+    get:
+      operationId: adminGetUserInvoices
+      tags: [admin]
+      summary: Admin - get user invoices
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Invoice"
+
+  /stats:
+    get:
+      operationId: getStats
+      tags: [records]
+      summary: Get dashboard stats
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Stats"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +372,254 @@ components:
       required:
         - status
 
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        loginCode:
+          type: string
+        role:
+          type: string
+          enum: [user, admin]
+        deviceId:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - username
+        - loginCode
+        - role
+        - createdAt
+
+    RegisterInput:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 2
+        loginCode:
+          type: string
+          minLength: 4
+        deviceId:
+          type: string
+      required:
+        - username
+        - loginCode
+
+    LoginInput:
+      type: object
+      properties:
+        loginCode:
+          type: string
+      required:
+        - loginCode
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        token:
+          type: string
+      required:
+        - user
+        - token
+
+    CustomerRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        username:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        breakdownType:
+          type: string
+        totalAmount:
+          type: number
+        customerNumber:
+          type: ["string", "null"]
+        carType:
+          type: string
+        licensePlate:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - userId
+        - username
+        - firstName
+        - lastName
+        - breakdownType
+        - totalAmount
+        - carType
+        - licensePlate
+        - createdAt
+
+    RecordInput:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        breakdownType:
+          type: string
+        totalAmount:
+          type: number
+        customerNumber:
+          type: string
+        carType:
+          type: string
+        licensePlate:
+          type: string
+      required:
+        - firstName
+        - lastName
+        - breakdownType
+        - totalAmount
+        - carType
+        - licensePlate
+
+    RecordUpdate:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        breakdownType:
+          type: string
+        totalAmount:
+          type: number
+        customerNumber:
+          type: string
+        carType:
+          type: string
+        licensePlate:
+          type: string
+
+    Invoice:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        username:
+          type: string
+        customerNumber:
+          type: ["string", "null"]
+        firstName:
+          type: string
+        lastName:
+          type: string
+        carType:
+          type: string
+        licensePlate:
+          type: string
+        workshopName:
+          type: string
+        breakdownType:
+          type: string
+        paymentMethod:
+          type: string
+        amount:
+          type: number
+        createdAt:
+          type: string
+      required:
+        - id
+        - userId
+        - username
+        - firstName
+        - lastName
+        - carType
+        - licensePlate
+        - workshopName
+        - breakdownType
+        - paymentMethod
+        - amount
+        - createdAt
+
+    InvoiceInput:
+      type: object
+      properties:
+        customerNumber:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        carType:
+          type: string
+        licensePlate:
+          type: string
+        workshopName:
+          type: string
+        breakdownType:
+          type: string
+        paymentMethod:
+          type: string
+        amount:
+          type: number
+      required:
+        - firstName
+        - lastName
+        - carType
+        - licensePlate
+        - workshopName
+        - breakdownType
+        - paymentMethod
+        - amount
+
+    InvoiceUpdate:
+      type: object
+      properties:
+        customerNumber:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        carType:
+          type: string
+        licensePlate:
+          type: string
+        workshopName:
+          type: string
+        breakdownType:
+          type: string
+        paymentMethod:
+          type: string
+        amount:
+          type: number
+
+    Stats:
+      type: object
+      properties:
+        totalRecords:
+          type: integer
+        totalInvoices:
+          type: integer
+        totalAmount:
+          type: number
+        recentRecords:
+          type: array
+          items:
+            $ref: "#/components/schemas/CustomerRecord"
+      required:
+        - totalRecords
+        - totalInvoices
+        - totalAmount
+        - recentRecords
