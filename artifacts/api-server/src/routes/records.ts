@@ -8,7 +8,6 @@ const router = Router();
 function formatRecord(
   r: typeof recordsTable.$inferSelect,
   username: string,
-  visitCount = 1
 ) {
   return {
     id: r.id,
@@ -23,8 +22,8 @@ function formatRecord(
     carType: r.carType,
     licensePlate: r.licensePlate,
     paymentStatus: r.paymentStatus,
+    visitCount: r.visitCount,
     entryDate: r.entryDate.toISOString(),
-    visitCount,
     createdAt: r.createdAt.toISOString(),
   };
 }
@@ -65,18 +64,7 @@ router.get("/", requireAuth, async (req, res) => {
 
   const results = await query.where(and(...conditions)).orderBy(recordsTable.entryDate);
 
-  const plateCounts: Record<string, number> = {};
-  results.forEach(({ record }) => {
-    const key = `${record.userId}:${record.licensePlate.toUpperCase()}`;
-    plateCounts[key] = (plateCounts[key] || 0) + 1;
-  });
-
-  res.json(
-    results.map(({ record, username }) => {
-      const key = `${record.userId}:${record.licensePlate.toUpperCase()}`;
-      return formatRecord(record, username, plateCounts[key] || 1);
-    })
-  );
+  res.json(results.map(({ record, username }) => formatRecord(record, username)));
 });
 
 // POST /api/records
@@ -91,6 +79,7 @@ router.post("/", requireAuth, async (req, res) => {
     carType: string;
     licensePlate: string;
     paymentStatus?: string;
+    visitCount?: number;
     entryDate?: string;
   };
 
@@ -107,12 +96,13 @@ router.post("/", requireAuth, async (req, res) => {
       carType: body.carType,
       licensePlate: body.licensePlate,
       paymentStatus: body.paymentStatus || "unpaid",
+      visitCount: Math.max(1, Math.round(body.visitCount ?? 1)),
       entryDate: body.entryDate ? new Date(body.entryDate) : new Date(),
     })
     .returning();
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.userId!)).limit(1);
-  res.status(201).json(formatRecord(record, user.username, 1));
+  res.status(201).json(formatRecord(record, user.username));
 });
 
 // GET /api/records/:id
@@ -129,6 +119,7 @@ router.get("/:id", requireAuth, async (req, res) => {
   res.json(formatRecord(result[0].record, result[0].username));
 });
 
+
 // PUT /api/records/:id
 router.put("/:id", requireAuth, async (req, res) => {
   const id = parseInt(req.params["id"] as string, 10);
@@ -142,6 +133,7 @@ router.put("/:id", requireAuth, async (req, res) => {
     carType: string;
     licensePlate: string;
     paymentStatus: string;
+    visitCount: number;
     entryDate: string;
   }>;
 
@@ -155,6 +147,7 @@ router.put("/:id", requireAuth, async (req, res) => {
   if (body.carType !== undefined) update.carType = body.carType;
   if (body.licensePlate !== undefined) update.licensePlate = body.licensePlate;
   if (body.paymentStatus !== undefined) update.paymentStatus = body.paymentStatus;
+  if (body.visitCount !== undefined) update.visitCount = Math.max(1, Math.round(body.visitCount));
   if (body.entryDate !== undefined) update.entryDate = new Date(body.entryDate);
 
   const [record] = await db

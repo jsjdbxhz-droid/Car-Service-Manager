@@ -60,6 +60,7 @@ const formSchema = z.object({
   carType:           z.string().min(1, 'مطلوب'),
   licensePlate:      z.string().min(1, 'مطلوب'),
   customerNumber:    z.string().optional(),
+  visitCount:        z.coerce.number().int().min(1),
   breakdownType:     z.string().min(1, 'مطلوب'),
   repairDescription: z.string().optional(),
   totalAmount:       z.coerce.number().min(0),
@@ -90,7 +91,7 @@ export default function RecordForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       firstName: '', lastName: '', carType: '', licensePlate: '',
-      customerNumber: '', breakdownType: '', repairDescription: '',
+      customerNumber: '', visitCount: 1, breakdownType: '', repairDescription: '',
       totalAmount: 0, paymentStatus: 'unpaid', entryDate: todayIso(),
     },
   });
@@ -104,12 +105,13 @@ export default function RecordForm() {
         carType:           record.carType,
         licensePlate:      record.licensePlate,
         customerNumber:    record.customerNumber ?? '',
+        visitCount:        (record as typeof record & { visitCount?: number }).visitCount ?? 1,
         breakdownType:     record.breakdownType,
         repairDescription: record.repairDescription ?? '',
         totalAmount:       record.totalAmount,
         paymentStatus:     (record.paymentStatus as 'unpaid' | 'paid' | 'partial') ?? 'unpaid',
         entryDate:         record.entryDate
-          ? record.entryDate.slice(0, 10)   // ISO → "YYYY-MM-DD"
+          ? record.entryDate.slice(0, 10)
           : todayIso(),
       });
     }
@@ -117,9 +119,6 @@ export default function RecordForm() {
 
   const watchedDate = form.watch('entryDate');
   const monthLabel  = getMonthName(watchedDate, language);
-
-  // visit count (only meaningful on edit)
-  const visitCount = (record as (typeof record & { visitCount?: number }) | undefined)?.visitCount ?? 1;
 
   const onSubmit = (values: FormValues) => {
     const payload = {
@@ -164,11 +163,6 @@ export default function RecordForm() {
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
           {isEdit ? t('records.edit') : t('records.add_new')}
         </h1>
-        {isEdit && (
-          <span className="ms-auto bg-primary/10 text-primary text-sm font-semibold px-3 py-1 rounded-full">
-            {t('field.visitCount')}: {visitCount}
-          </span>
-        )}
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
@@ -225,13 +219,15 @@ export default function RecordForm() {
                   <FormMessage />
                 </FormItem>
               )} />
-              {/* عدد مرات الدخول — read-only, computed server-side */}
-              <div className="flex flex-col gap-2">
-                <span className="text-sm font-medium leading-none">{t('field.visitCount')}</span>
-                <div className="h-10 flex items-center px-3 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 text-sm select-none">
-                  {isEdit ? visitCount : '—'}
-                </div>
-              </div>
+              <FormField control={form.control} name="visitCount" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('field.visitCount')}</FormLabel>
+                  <FormControl>
+                    <Input type="number" min={1} step={1} {...field} dir="ltr" className="text-start" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
             </div>
 
             {/* نوع العطل */}

@@ -15,6 +15,7 @@ export const recordsTable = pgTable("records", {
   carType: text("car_type").notNull(),
   licensePlate: text("license_plate").notNull(),
   paymentStatus: text("payment_status").notNull().default("unpaid"),
+  visitCount: integer("visit_count").notNull().default(1),
   entryDate: timestamp("entry_date").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

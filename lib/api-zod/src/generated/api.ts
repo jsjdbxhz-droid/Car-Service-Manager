@@ -67,7 +67,7 @@ const RecordShape = {
   licensePlate: zod.string(),
   paymentStatus: zod.string(),
   entryDate: zod.string(),
-  visitCount: zod.number().optional(),
+  visitCount: zod.number().int().min(1),
   createdAt: zod.string(),
 };
 
@@ -96,6 +96,7 @@ export const CreateRecordBody = zod.object({
   "carType": zod.string(),
   "licensePlate": zod.string(),
   "paymentStatus": zod.string().optional(),
+  "visitCount": zod.number().int().min(1).optional(),
   "entryDate": zod.string().optional(),
 })
 
@@ -129,6 +130,7 @@ export const UpdateRecordBody = zod.object({
   "carType": zod.string().optional(),
   "licensePlate": zod.string().optional(),
   "paymentStatus": zod.string().optional(),
+  "visitCount": zod.number().int().min(1).optional(),
   "entryDate": zod.string().optional(),
 })
 
