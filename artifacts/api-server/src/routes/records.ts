@@ -17,10 +17,13 @@ function formatRecord(
     firstName: r.firstName,
     lastName: r.lastName,
     breakdownType: r.breakdownType,
+    repairDescription: r.repairDescription,
     totalAmount: Number(r.totalAmount),
     customerNumber: r.customerNumber,
     carType: r.carType,
     licensePlate: r.licensePlate,
+    paymentStatus: r.paymentStatus,
+    entryDate: r.entryDate.toISOString(),
     visitCount,
     createdAt: r.createdAt.toISOString(),
   };
@@ -30,7 +33,6 @@ function formatRecord(
 router.get("/", requireAuth, async (req, res) => {
   const { search, deviceId } = req.query as { search?: string; deviceId?: string };
 
-  // Find all user IDs to include (same device)
   let userIds: number[] = [req.userId!];
   if (deviceId) {
     const deviceUsers = await db
@@ -42,10 +44,7 @@ router.get("/", requireAuth, async (req, res) => {
   }
 
   let query = db
-    .select({
-      record: recordsTable,
-      username: usersTable.username,
-    })
+    .select({ record: recordsTable, username: usersTable.username })
     .from(recordsTable)
     .innerJoin(usersTable, eq(recordsTable.userId, usersTable.id))
     .$dynamic();
@@ -64,9 +63,8 @@ router.get("/", requireAuth, async (req, res) => {
     );
   }
 
-  const results = await query.where(and(...conditions)).orderBy(recordsTable.createdAt);
+  const results = await query.where(and(...conditions)).orderBy(recordsTable.entryDate);
 
-  // Compute visitCount per licensePlate (across all results)
   const plateCounts: Record<string, number> = {};
   results.forEach(({ record }) => {
     const key = `${record.userId}:${record.licensePlate.toUpperCase()}`;
@@ -87,10 +85,13 @@ router.post("/", requireAuth, async (req, res) => {
     firstName: string;
     lastName: string;
     breakdownType: string;
+    repairDescription?: string;
     totalAmount: number;
     customerNumber?: string;
     carType: string;
     licensePlate: string;
+    paymentStatus?: string;
+    entryDate?: string;
   };
 
   const [record] = await db
@@ -100,15 +101,17 @@ router.post("/", requireAuth, async (req, res) => {
       firstName: body.firstName,
       lastName: body.lastName,
       breakdownType: body.breakdownType,
+      repairDescription: body.repairDescription || null,
       totalAmount: String(body.totalAmount),
       customerNumber: body.customerNumber || null,
       carType: body.carType,
       licensePlate: body.licensePlate,
+      paymentStatus: body.paymentStatus || "unpaid",
+      entryDate: body.entryDate ? new Date(body.entryDate) : new Date(),
     })
     .returning();
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.userId!)).limit(1);
-
   res.status(201).json(formatRecord(record, user.username, 1));
 });
 
@@ -122,10 +125,7 @@ router.get("/:id", requireAuth, async (req, res) => {
     .where(and(eq(recordsTable.id, id), eq(recordsTable.userId, req.userId!)))
     .limit(1);
 
-  if (!result.length) {
-    res.status(404).json({ error: "Not found" });
-    return;
-  }
+  if (!result.length) { res.status(404).json({ error: "Not found" }); return; }
   res.json(formatRecord(result[0].record, result[0].username));
 });
 
@@ -136,20 +136,26 @@ router.put("/:id", requireAuth, async (req, res) => {
     firstName: string;
     lastName: string;
     breakdownType: string;
+    repairDescription: string;
     totalAmount: number;
     customerNumber: string;
     carType: string;
     licensePlate: string;
+    paymentStatus: string;
+    entryDate: string;
   }>;
 
   const update: Record<string, unknown> = {};
   if (body.firstName !== undefined) update.firstName = body.firstName;
   if (body.lastName !== undefined) update.lastName = body.lastName;
   if (body.breakdownType !== undefined) update.breakdownType = body.breakdownType;
+  if (body.repairDescription !== undefined) update.repairDescription = body.repairDescription;
   if (body.totalAmount !== undefined) update.totalAmount = String(body.totalAmount);
   if (body.customerNumber !== undefined) update.customerNumber = body.customerNumber;
   if (body.carType !== undefined) update.carType = body.carType;
   if (body.licensePlate !== undefined) update.licensePlate = body.licensePlate;
+  if (body.paymentStatus !== undefined) update.paymentStatus = body.paymentStatus;
+  if (body.entryDate !== undefined) update.entryDate = new Date(body.entryDate);
 
   const [record] = await db
     .update(recordsTable)
@@ -157,10 +163,7 @@ router.put("/:id", requireAuth, async (req, res) => {
     .where(and(eq(recordsTable.id, id), eq(recordsTable.userId, req.userId!)))
     .returning();
 
-  if (!record) {
-    res.status(404).json({ error: "Not found" });
-    return;
-  }
+  if (!record) { res.status(404).json({ error: "Not found" }); return; }
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.userId!)).limit(1);
   res.json(formatRecord(record, user.username));

@@ -8,9 +8,9 @@ interface Translations {
 
 const arTranslations: Translations = {
   // App Shell
-  'app.name': 'إدارة الورشة',
+  'app.name': 'Car Service Manager',
   'nav.dashboard': 'لوحة القيادة',
-  'nav.records': 'القائمة',
+  'nav.records': 'استمارة',
   'nav.invoices': 'الفواتير',
   'nav.owner': 'لوحة الأونر',
   'nav.admin': 'لوحة الأونر',
@@ -26,7 +26,7 @@ const arTranslations: Translations = {
   'dashboard.recent_records': 'أحدث السجلات',
 
   // Auth & Landing / Gateway
-  'auth.landing_title': 'إدارة الورشة',
+  'auth.landing_title': 'Car Service Manager',
   'auth.gateway_subtitle': 'أدخل كود الدخول للمتابعة',
   'auth.enter_code': 'أدخل الكود...',
   'auth.submit': 'دخول',
@@ -138,6 +138,19 @@ const arTranslations: Translations = {
   'download.ios_instructions': 'على iPhone: افتح في Safari، ثم اضغط زر المشاركة ← "إضافة إلى الشاشة الرئيسية"',
   'download.android_instructions': 'افتح في Chrome، ثم اضغط على القائمة (⋮) ← "إضافة إلى الشاشة الرئيسية"',
 
+  // Payment status
+  'payment.unpaid': 'غير مدفوع',
+  'payment.partial': 'مدفوع جزئياً',
+  'payment.paid': 'مدفوع',
+
+  // Fields — new
+  'field.repairDescription': 'الإصلاح الذي تم',
+  'field.paymentStatus': 'حالة الدفع',
+  'field.entryDate': 'تاريخ الدخول',
+  'field.month': 'الشهر',
+  'field.totalAmount_dzd': 'المبلغ (د.ج)',
+  'field.breakdownType_placeholder': 'صف نوع العطل...',
+
   // Voice input
   'voice.switch_voice': 'إدخال صوتي',
   'voice.switch_text': 'تبديل للكتابة',
@@ -156,7 +169,7 @@ const arTranslations: Translations = {
 };
 
 const enTranslations: Translations = {
-  'app.name': 'Garage Manager',
+  'app.name': 'Car Service Manager',
   'nav.dashboard': 'Dashboard',
   'nav.records': 'Records',
   'nav.invoices': 'Invoices',
@@ -172,7 +185,7 @@ const enTranslations: Translations = {
   'dashboard.total_amount': 'Total Amount',
   'dashboard.recent_records': 'Recent Records',
 
-  'auth.landing_title': 'Garage Manager',
+  'auth.landing_title': 'Car Service Manager',
   'auth.gateway_subtitle': 'Enter the access code to continue',
   'auth.enter_code': 'Enter code...',
   'auth.submit': 'Continue',
@@ -292,7 +305,7 @@ const enTranslations: Translations = {
 };
 
 const frTranslations: Translations = {
-  'app.name': 'Gestion de Garage',
+  'app.name': 'Car Service Manager',
   'nav.dashboard': 'Tableau de bord',
   'nav.records': 'Dossiers',
   'nav.invoices': 'Factures',
@@ -308,7 +321,7 @@ const frTranslations: Translations = {
   'dashboard.total_amount': 'Montant Total',
   'dashboard.recent_records': 'Dossiers Récents',
 
-  'auth.landing_title': 'Gestion de Garage',
+  'auth.landing_title': 'Car Service Manager',
   'auth.gateway_subtitle': 'Entrez le code d\'accès pour continuer',
   'auth.enter_code': 'Entrez le code...',
   'auth.submit': 'Continuer',

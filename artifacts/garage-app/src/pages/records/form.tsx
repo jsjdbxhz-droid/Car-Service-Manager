@@ -4,46 +4,83 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useI18n } from '@/contexts/i18n-context';
-import { useGetRecord, useCreateRecord, useUpdateRecord, getListRecordsQueryKey, getGetRecordQueryKey } from '@workspace/api-client-react';
+import {
+  useGetRecord,
+  useCreateRecord,
+  useUpdateRecord,
+  getListRecordsQueryKey,
+  getGetRecordQueryKey,
+} from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Button } from '@/components/ui/button';
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowRight, ArrowLeft } from 'lucide-react';
+import { ArrowRight, ArrowLeft, CalendarDays } from 'lucide-react';
 
+// ── helpers ──────────────────────────────────────────────────────────────────
+function todayIso() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+const MONTH_NAMES_AR = [
+  'جانفي','فيفري','مارس','أفريل','ماي','جوان',
+  'جويلية','أوت','سبتمبر','أكتوبر','نوفمبر','ديسمبر',
+];
+const MONTH_NAMES_FR = [
+  'Janvier','Février','Mars','Avril','Mai','Juin',
+  'Juillet','Août','Septembre','Octobre','Novembre','Décembre',
+];
+const MONTH_NAMES_EN = [
+  'January','February','March','April','May','June',
+  'July','August','September','October','November','December',
+];
+
+function getMonthName(dateStr: string, lang: string): string {
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '';
+  const idx = d.getMonth();
+  if (lang === 'fr') return MONTH_NAMES_FR[idx] ?? '';
+  if (lang === 'en') return MONTH_NAMES_EN[idx] ?? '';
+  return MONTH_NAMES_AR[idx] ?? '';
+}
+
+// ── schema ───────────────────────────────────────────────────────────────────
 const formSchema = z.object({
-  firstName: z.string().min(1, 'Required'),
-  lastName: z.string().min(1, 'Required'),
-  carType: z.string().min(1, 'Required'),
-  licensePlate: z.string().min(1, 'Required'),
-  breakdownType: z.string().min(1, 'Required'),
-  totalAmount: z.coerce.number().min(0),
-  customerNumber: z.string().optional(),
+  firstName:         z.string().min(1, 'مطلوب'),
+  lastName:          z.string().min(1, 'مطلوب'),
+  carType:           z.string().min(1, 'مطلوب'),
+  licensePlate:      z.string().min(1, 'مطلوب'),
+  customerNumber:    z.string().optional(),
+  breakdownType:     z.string().min(1, 'مطلوب'),
+  repairDescription: z.string().optional(),
+  totalAmount:       z.coerce.number().min(0),
+  paymentStatus:     z.enum(['unpaid', 'paid', 'partial']),
+  entryDate:         z.string().min(1, 'مطلوب'),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
+// ── component ─────────────────────────────────────────────────────────────────
 export default function RecordForm() {
-  const params = useParams();
-  const id = params.id ? parseInt(params.id, 10) : null;
-  const isEdit = !!id;
+  const params     = useParams();
+  const id         = params.id ? parseInt(params.id, 10) : null;
+  const isEdit     = !!id;
   const [, setLocation] = useLocation();
   const { t, language } = useI18n();
-  const { toast } = useToast();
+  const { toast }  = useToast();
   const queryClient = useQueryClient();
 
   const { data: record, isLoading } = useGetRecord(id as number, {
-    query: { enabled: isEdit, queryKey: getGetRecordQueryKey(id as number) }
+    query: { enabled: isEdit, queryKey: getGetRecordQueryKey(id as number) },
   });
 
   const createMutation = useCreateRecord();
@@ -53,39 +90,61 @@ export default function RecordForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       firstName: '', lastName: '', carType: '', licensePlate: '',
-      breakdownType: '', totalAmount: 0, customerNumber: '',
+      customerNumber: '', breakdownType: '', repairDescription: '',
+      totalAmount: 0, paymentStatus: 'unpaid', entryDate: todayIso(),
     },
   });
 
+  // prefill on edit
   useEffect(() => {
     if (record) {
       form.reset({
-        firstName: record.firstName, lastName: record.lastName,
-        carType: record.carType, licensePlate: record.licensePlate,
-        breakdownType: record.breakdownType, totalAmount: record.totalAmount,
-        customerNumber: record.customerNumber || '',
+        firstName:         record.firstName,
+        lastName:          record.lastName,
+        carType:           record.carType,
+        licensePlate:      record.licensePlate,
+        customerNumber:    record.customerNumber ?? '',
+        breakdownType:     record.breakdownType,
+        repairDescription: record.repairDescription ?? '',
+        totalAmount:       record.totalAmount,
+        paymentStatus:     (record.paymentStatus as 'unpaid' | 'paid' | 'partial') ?? 'unpaid',
+        entryDate:         record.entryDate
+          ? record.entryDate.slice(0, 10)   // ISO → "YYYY-MM-DD"
+          : todayIso(),
       });
     }
   }, [record, form]);
 
+  const watchedDate = form.watch('entryDate');
+  const monthLabel  = getMonthName(watchedDate, language);
+
+  // visit count (only meaningful on edit)
+  const visitCount = (record as (typeof record & { visitCount?: number }) | undefined)?.visitCount ?? 1;
+
   const onSubmit = (values: FormValues) => {
+    const payload = {
+      ...values,
+      totalAmount: Number(values.totalAmount),
+      entryDate: values.entryDate,   // "YYYY-MM-DD" – server converts to Date
+    };
+
     if (isEdit) {
-      updateMutation.mutate({ id: id as number, data: values }, {
+      updateMutation.mutate({ id: id as number, data: payload }, {
         onSuccess: () => {
           toast({ title: t('msg.success') });
-          queryClient.invalidateQueries({ queryKey: getListRecordsQueryKey() });
+          void queryClient.invalidateQueries({ queryKey: getListRecordsQueryKey() });
           setLocation('/records');
         },
-        onError: () => toast({ title: t('msg.error'), variant: 'destructive' })
+        onError: () => toast({ title: t('msg.error'), variant: 'destructive' }),
       });
     } else {
-      createMutation.mutate({ data: values }, {
+      createMutation.mutate({ data: payload }, {
         onSuccess: () => {
           toast({ title: t('msg.success') });
-          queryClient.invalidateQueries({ queryKey: getListRecordsQueryKey() });
+          void queryClient.invalidateQueries({ queryKey: getListRecordsQueryKey() });
           setLocation('/records');
         },
-        onError: () => toast({ title: t('msg.error'), variant: 'destructive' })
+        onError: () => toast({ title: t('msg.error'), variant: 'destructive' }),
       });
     }
   };
@@ -96,6 +155,8 @@ export default function RecordForm() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+
+      {/* header */}
       <div className="flex items-center gap-4">
         <Button variant="outline" size="icon" onClick={() => setLocation('/records')}>
           {language === 'ar' ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
@@ -103,12 +164,19 @@ export default function RecordForm() {
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
           {isEdit ? t('records.edit') : t('records.add_new')}
         </h1>
+        {isEdit && (
+          <span className="ms-auto bg-primary/10 text-primary text-sm font-semibold px-3 py-1 rounded-full">
+            {t('field.visitCount')}: {visitCount}
+          </span>
+        )}
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+
+            {/* Row 1: الاسم + اللقب */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField control={form.control} name="firstName" render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t('field.firstName')}</FormLabel>
@@ -123,6 +191,10 @@ export default function RecordForm() {
                   <FormMessage />
                 </FormItem>
               )} />
+            </div>
+
+            {/* Row 2: نوع المركبة + رقم اللوحة */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField control={form.control} name="carType" render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t('field.carType')}</FormLabel>
@@ -133,37 +205,156 @@ export default function RecordForm() {
               <FormField control={form.control} name="licensePlate" render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t('field.licensePlate')}</FormLabel>
-                  <FormControl><Input {...field} dir="ltr" className="text-end font-mono" /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <FormField control={form.control} name="customerNumber" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('field.customerNumber')}</FormLabel>
-                  <FormControl><Input {...field} dir="ltr" className="text-end" /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <FormField control={form.control} name="totalAmount" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('field.totalAmount')}</FormLabel>
-                  <FormControl><Input type="number" {...field} /></FormControl>
+                  <FormControl>
+                    <Input {...field} dir="ltr" className="text-end font-mono tracking-widest uppercase" />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
             </div>
 
+            {/* Row 3: رقم الزبون + عدد مرات الدخول (new entry: readonly badge) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField control={form.control} name="customerNumber" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    {t('field.customerNumber')}
+                    <span className="ms-1 text-xs text-slate-400">({t('voice.optional')})</span>
+                  </FormLabel>
+                  <FormControl><Input {...field} dir="ltr" className="text-end" /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              {/* عدد مرات الدخول — read-only, computed server-side */}
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-medium leading-none">{t('field.visitCount')}</span>
+                <div className="h-10 flex items-center px-3 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 text-sm select-none">
+                  {isEdit ? visitCount : '—'}
+                </div>
+              </div>
+            </div>
+
+            {/* نوع العطل */}
             <FormField control={form.control} name="breakdownType" render={({ field }) => (
               <FormItem>
                 <FormLabel>{t('field.breakdownType')}</FormLabel>
-                <FormControl><Textarea {...field} className="min-h-[100px]" /></FormControl>
+                <FormControl>
+                  <Input {...field} placeholder={t('field.breakdownType_placeholder')} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )} />
 
-            <Button type="submit" className="w-full h-12" disabled={isPending}>
-              {isPending ? '...' : t('records.save')}
-            </Button>
+            {/* الإصلاح الذي تم */}
+            <FormField control={form.control} name="repairDescription" render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('field.repairDescription')}</FormLabel>
+                <FormControl>
+                  <Textarea
+                    {...field}
+                    className="min-h-[90px]"
+                    placeholder="Description de la réparation effectuée..."
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+
+            {/* Row: المبلغ + حالة الدفع */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField control={form.control} name="totalAmount" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('field.totalAmount_dzd')}</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        min={0}
+                        step="1"
+                        {...field}
+                        className="pe-14"
+                      />
+                      <span className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none select-none">
+                        د.ج
+                      </span>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="paymentStatus" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('field.paymentStatus')}</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="unpaid">
+                        <span className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-red-400 inline-block" />
+                          {t('payment.unpaid')}
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="partial">
+                        <span className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
+                          {t('payment.partial')}
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="paid">
+                        <span className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+                          {t('payment.paid')}
+                        </span>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            </div>
+
+            {/* تاريخ الدخول + الشهر */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField control={form.control} name="entryDate" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1.5">
+                    <CalendarDays className="w-3.5 h-3.5 text-slate-400" />
+                    {t('field.entryDate')}
+                  </FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} dir="ltr" className="text-start" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-medium leading-none">{t('field.month')}</span>
+                <div className="h-10 flex items-center px-3 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm select-none">
+                  {monthLabel || '—'}
+                </div>
+              </div>
+            </div>
+
+            {/* actions */}
+            <div className="flex gap-3 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1 h-12"
+                onClick={() => setLocation('/records')}
+                disabled={isPending}
+              >
+                {t('msg.cancel')}
+              </Button>
+              <Button type="submit" className="flex-1 h-12 text-base font-bold" disabled={isPending}>
+                {isPending ? '...' : t('records.save')}
+              </Button>
+            </div>
+
           </form>
         </Form>
       </div>
