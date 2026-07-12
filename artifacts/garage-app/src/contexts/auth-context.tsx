@@ -75,17 +75,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Check if the stored gateway revision still matches the server's current revision.
-  // Called on tab focus / visibility change — if the owner changed the code, users are auto-logged out of the gateway.
+  // Called on tab focus / visibility change — if the owner changed the code, users are auto-logged out.
   const checkRevision = useCallback(async () => {
-    const stored = localStorage.getItem(GATEWAY_KEY);
-    if (!stored) return;
     try {
       const res = await fetch(`${getApiBase()}/api/config/session-revision`);
       if (!res.ok) return;
       const data = (await res.json()) as { revision: number };
-      if (data.revision !== Number(stored)) {
+      const stored = localStorage.getItem(GATEWAY_KEY);
+      if (stored !== null && data.revision !== Number(stored)) {
+        // Gateway revision changed — clear gateway and log out
         localStorage.removeItem(GATEWAY_KEY);
+        localStorage.removeItem(AUTH_KEY);
+        localStorage.removeItem(ORIGINAL_AUTH_KEY);
         setGatewayRevision(null);
+        setSession(null);
+        setOriginalSession(null);
       }
     } catch { /* network error — keep current state */ }
   }, []);
