@@ -1,0 +1,127 @@
+2026-07-12T23:39:36.147667781Z rendering chunks...
+2026-07-12T23:39:36.157417533Z computing gzip size...
+2026-07-12T23:39:36.17527812Z dist/public/index.html                   1.37 kB │ gzip:   0.54 kB
+2026-07-12T23:39:36.175308331Z dist/public/assets/index-CZDI1t7l.css   95.32 kB │ gzip:  16.29 kB
+2026-07-12T23:39:36.175391473Z dist/public/assets/index-DUE7zTRI.js   598.91 kB │ gzip: 180.26 kB
+2026-07-12T23:39:36.175446515Z 
+2026-07-12T23:39:36.175455015Z (!) Some chunks are larger than 500 kB after minification. Consider:
+2026-07-12T23:39:36.175460445Z - Using dynamic import() to code-split the application
+2026-07-12T23:39:36.175466915Z - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+2026-07-12T23:39:36.175472885Z - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+2026-07-12T23:39:36.175693751Z ✓ built in 3.56s
+2026-07-12T23:39:36.671145004Z 
+2026-07-12T23:39:36.671176074Z > @workspace/db@0.0.0 push-force /opt/render/project/src/lib/db
+2026-07-12T23:39:36.671180985Z > drizzle-kit push --force --config ./drizzle.config.ts
+2026-07-12T23:39:36.671184955Z 
+2026-07-12T23:39:36.819961419Z Reading config file '/opt/render/project/src/lib/db/drizzle.config.ts'
+2026-07-12T23:39:37.436909605Z Using 'pg' driver for database querying
+2026-07-12T23:39:37.851809554Z [⣷] Pulling schema from database...
+2026-07-12T23:39:37.852373209Z (node:226) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+2026-07-12T23:39:37.85238913Z In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+2026-07-12T23:39:37.85239517Z 
+2026-07-12T23:39:37.85240072Z To prepare for this change:
+2026-07-12T23:39:37.85240637Z - If you want the current behavior, explicitly use 'sslmode=verify-full'
+2026-07-12T23:39:37.852423471Z - If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+2026-07-12T23:39:37.852426401Z 
+2026-07-12T23:39:37.852430271Z See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+2026-07-12T23:39:37.852433221Z (Use `node --trace-warnings ...` to show where the warning was created)
+2026-07-12T23:39:37.973262457Z [⣯] Pulling schema from database...
+2026-07-12T23:39:38.101011776Z [⣟] Pulling schema from database...
+2026-07-12T23:39:38.229104934Z [⡿] Pulling schema from database...
+2026-07-12T23:39:38.357080979Z [⢿] Pulling schema from database...
+2026-07-12T23:39:38.48527088Z [⣻] Pulling schema from database...
+2026-07-12T23:39:38.613499952Z [⣽] Pulling schema from database...
+2026-07-12T23:39:38.742347701Z [⣷] Pulling schema from database...
+2026-07-12T23:39:38.870493261Z [⣯] Pulling schema from database...
+2026-07-12T23:39:38.999444713Z [⣟] Pulling schema from database...
+2026-07-12T23:39:39.126866863Z [⡿] Pulling schema from database...
+2026-07-12T23:39:39.254631012Z [⢿] Pulling schema from database...
+2026-07-12T23:39:39.383453621Z [⣻] Pulling schema from database...
+2026-07-12T23:39:39.51158343Z [⣽] Pulling schema from database...
+2026-07-12T23:39:39.64009164Z [⣷] Pulling schema from database...
+2026-07-12T23:39:39.768466636Z [⣯] Pulling schema from database...
+2026-07-12T23:39:39.896970446Z [⣟] Pulling schema from database...
+2026-07-12T23:39:40.025159357Z [⡿] Pulling schema from database...
+2026-07-12T23:39:40.153510392Z [⢿] Pulling schema from database...
+2026-07-12T23:39:40.28231964Z [⣻] Pulling schema from database...
+2026-07-12T23:39:40.40973654Z [⣽] Pulling schema from database...
+2026-07-12T23:39:40.450525606Z [✓] Pulling schema from database...
+2026-07-12T23:39:40.457596453Z [i] No changes detected
+2026-07-12T23:39:40.880091202Z 
+2026-07-12T23:39:40.880117683Z > @workspace/api-server@0.0.0 build /opt/render/project/src/artifacts/api-server
+2026-07-12T23:39:40.880122813Z > node ./build.mjs
+2026-07-12T23:39:40.880125913Z 
+2026-07-12T23:39:41.377971342Z 
+2026-07-12T23:39:41.377995872Z   dist/index.mjs                       2.2mb ⚠️
+2026-07-12T23:39:41.378001412Z   dist/pino-worker.mjs               153.4kb
+2026-07-12T23:39:41.378005343Z   dist/pino-file.mjs                 142.1kb
+2026-07-12T23:39:41.378009163Z   dist/pino-pretty.mjs               114.6kb
+2026-07-12T23:39:41.378013143Z   dist/thread-stream-worker.mjs        7.3kb
+2026-07-12T23:39:41.378017513Z   dist/index.mjs.map                   3.8mb
+2026-07-12T23:39:41.378021303Z   dist/pino-worker.mjs.map           256.9kb
+2026-07-12T23:39:41.378024993Z   dist/pino-file.mjs.map             229.0kb
+2026-07-12T23:39:41.378028773Z   dist/pino-pretty.mjs.map           204.0kb
+2026-07-12T23:39:41.378032533Z   dist/thread-stream-worker.mjs.map   12.0kb
+2026-07-12T23:39:41.378036273Z 
+2026-07-12T23:39:41.378040804Z ⚡ Done in 440ms
+2026-07-12T23:39:47.282056483Z ==> Uploading build...
+2026-07-12T23:40:18.909978843Z ==> Uploaded in 3.5s. Compression took 28.2s
+2026-07-12T23:40:18.929942057Z ==> Build successful 🎉
+2026-07-12T23:40:24.030104021Z ==> Deploying...
+2026-07-12T23:40:24.117595414Z ==> Setting WEB_CONCURRENCY=1 by default, based on available CPUs in the instance
+2026-07-12T23:40:41.721782872Z ==> Running 'pnpm --filter @workspace/api-server run start'
+2026-07-12T23:40:45.629500969Z 
+2026-07-12T23:40:45.62952435Z > @workspace/api-server@0.0.0 start /opt/render/project/src/artifacts/api-server
+2026-07-12T23:40:45.62953001Z > node --enable-source-maps ./dist/index.mjs
+2026-07-12T23:40:45.62953295Z 
+2026-07-12T23:40:48.319226295Z /opt/render/project/src/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:218
+2026-07-12T23:40:48.319257496Z           throw new PathError(`Missing parameter name at index ${index}`, str);
+2026-07-12T23:40:48.319261786Z                 ^
+2026-07-12T23:40:48.319264526Z 
+2026-07-12T23:40:48.319267447Z PathError [TypeError]: Missing parameter name at index 1: *; visit https://git.new/pathToRegexpError for info
+2026-07-12T23:40:48.319270967Z     at consumeUntil (/opt/render/project/src/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:218:17)
+2026-07-12T23:40:48.319274376Z     at parse (/opt/render/project/src/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:262:24)
+2026-07-12T23:40:48.319277427Z     at process (/opt/render/project/src/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:466:52)
+2026-07-12T23:40:48.319280267Z     at pathToRegexp (/opt/render/project/src/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:478:3)
+2026-07-12T23:40:48.319283147Z     at Object.match (/opt/render/project/src/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:416:28)
+2026-07-12T23:40:48.319286017Z     at matcher (/opt/render/project/src/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:86:23)
+2026-07-12T23:40:48.319289087Z     at new Layer (/opt/render/project/src/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:93:62)
+2026-07-12T23:40:48.319292157Z     at router10.route (/opt/render/project/src/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:428:17)
+2026-07-12T23:40:48.319295137Z     at app2.route (/opt/render/project/src/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/application.js:257:22)
+2026-07-12T23:40:48.319297607Z     at app2.app2.<computed> (/opt/render/project/src/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/application.js:478:22) {
+2026-07-12T23:40:48.319300307Z   originalPath: '*'
+2026-07-12T23:40:48.319302947Z }
+2026-07-12T23:40:48.319305447Z 
+2026-07-12T23:40:48.319308267Z Node.js v24.14.1
+2026-07-12T23:40:48.431007403Z /opt/render/project/src/artifacts/api-server:
+2026-07-12T23:40:48.431023733Z  ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/api-server@0.0.0 start: `node --enable-source-maps ./dist/index.mjs`
+2026-07-12T23:40:48.431027863Z Exit status 1
+2026-07-12T23:40:52.501788271Z ==> Exited with status 1
+2026-07-12T23:40:52.506613375Z ==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
+2026-07-12T23:40:56.762012585Z ==> Running 'pnpm --filter @workspace/api-server run start'
+2026-07-12T23:40:59.75920937Z 
+2026-07-12T23:40:59.759238591Z > @workspace/api-server@0.0.0 start /opt/render/project/src/artifacts/api-server
+2026-07-12T23:40:59.759244921Z > node --enable-source-maps ./dist/index.mjs
+2026-07-12T23:40:59.759248131Z 
+2026-07-12T23:41:02.453841406Z /opt/render/project/src/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:218
+2026-07-12T23:41:02.453861547Z           throw new PathError(`Missing parameter name at index ${index}`, str);
+2026-07-12T23:41:02.453865207Z                 ^
+2026-07-12T23:41:02.453868167Z 
+2026-07-12T23:41:02.453871137Z PathError [TypeError]: Missing parameter name at index 1: *; visit https://git.new/pathToRegexpError for info
+2026-07-12T23:41:02.453874607Z     at consumeUntil (/opt/render/project/src/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:218:17)
+2026-07-12T23:41:02.453898248Z     at parse (/opt/render/project/src/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:262:24)
+2026-07-12T23:41:02.453904598Z     at process (/opt/render/project/src/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:466:52)
+2026-07-12T23:41:02.453907888Z     at pathToRegexp (/opt/render/project/src/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:478:3)
+2026-07-12T23:41:02.453910928Z     at Object.match (/opt/render/project/src/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:416:28)
+2026-07-12T23:41:02.453915528Z     at matcher (/opt/render/project/src/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:86:23)
+2026-07-12T23:41:02.453918308Z     at new Layer (/opt/render/project/src/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:93:62)
+2026-07-12T23:41:02.453920958Z     at router10.route (/opt/render/project/src/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:428:17)
+2026-07-12T23:41:02.453923978Z     at app2.route (/opt/render/project/src/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/application.js:257:22)
+2026-07-12T23:41:02.453926648Z     at app2.app2.<computed> (/opt/render/project/src/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/application.js:478:22) {
+2026-07-12T23:41:02.453929379Z   originalPath: '*'
+2026-07-12T23:41:02.453932228Z }
+2026-07-12T23:41:02.453935059Z 
+2026-07-12T23:41:02.453937759Z Node.js v24.14.1
+2026-07-12T23:41:02.564115287Z /opt/render/project/src/artifacts/api-server:
+2026-07-12T23:41:02.564157008Z  ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/api-server@0.0.0 start: `node --enable-source-maps ./dist/index.mjs`
+2026-07-12T23:41:02.564162958Z Exit status 1
