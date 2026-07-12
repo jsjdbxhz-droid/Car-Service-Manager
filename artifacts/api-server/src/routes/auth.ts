@@ -153,6 +153,7 @@ router.get("/me", requireAuth, async (req, res) => {
     loginCode: user.loginCode,
     role: user.role,
     deviceId: user.deviceId,
+    hideFromLeaderboard: user.hideFromLeaderboard,
     createdAt: user.createdAt.toISOString(),
   });
 });

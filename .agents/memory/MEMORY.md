@@ -1,2 +1,4 @@
 - [GarageManager auth](garage-auth.md) — HMAC-signed token (userId.hmac) using SESSION_SECRET; admin auto-assigned to username "زكرياء"; loginCode masked in admin list.
 - [GarageManager i18n](garage-i18n.md) — AR/EN/FR via React context; RTL set on html element for Arabic; language switcher in navbar.
+- [GarageManager leaderboard](garage-leaderboard.md) — GET /api/leaderboard (auth); PUT /api/leaderboard/privacy; hideFromLeaderboard column on users table; LeaderboardCard collapsible on dashboard; privacy toggle in settings.
+- [GarageManager edit-secret](garage-edit-secret.md) — GET /api/config/edit-code-enabled (public probe); POST /api/config/verify-edit-code (auth, separate rate-limit bucket); PUT /api/config/edit-code (admin); editCode stored in app_config; EditCodeCard in admin.tsx.

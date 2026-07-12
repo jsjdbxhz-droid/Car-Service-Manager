@@ -1,16 +1,50 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useI18n } from '@/contexts/i18n-context';
 import { useAuth } from '@/contexts/auth-context';
 import { useGetMe, getGetMeQueryKey } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, EyeOff, Copy, Check, Globe } from 'lucide-react';
+import { Eye, EyeOff, Copy, Check, Globe, ShieldOff, ShieldCheck } from 'lucide-react';
+
+function getApiBase() {
+  return ((import.meta.env.BASE_URL as string | undefined) ?? '').replace(/\/$/, '');
+}
 
 export default function Settings() {
   const { t, language, setLanguage } = useI18n();
   const { session } = useAuth();
   const [showCode, setShowCode] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const [privacySaving, setPrivacySaving] = useState(false);
+
+  // Load current privacy setting from /me
+  useEffect(() => {
+    if (!session?.token) return;
+    fetch(`${getApiBase()}/api/auth/me`, {
+      headers: { Authorization: `Bearer ${session.token}` },
+    })
+      .then(r => r.json())
+      .then((me: { hideFromLeaderboard?: boolean }) => {
+        setHidden(me.hideFromLeaderboard ?? false);
+      })
+      .catch(() => {});
+  }, [session?.token]);
+
+  const togglePrivacy = async () => {
+    if (!session?.token || privacySaving) return;
+    const next = !hidden;
+    setPrivacySaving(true);
+    try {
+      const res = await fetch(`${getApiBase()}/api/leaderboard/privacy`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${session.token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hidden: next }),
+      });
+      if (res.ok) setHidden(next);
+    } catch {}
+    finally { setPrivacySaving(false); }
+  };
 
   const { data: me } = useGetMe({ query: { enabled: !!session, queryKey: getGetMeQueryKey() } });
   const loginCode = me?.loginCode ?? '--------';
@@ -97,6 +131,47 @@ export default function Settings() {
               </div>
               <p className="text-xs text-slate-400 mt-2">{t('settings.code_info')}</p>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Privacy card ── */}
+      <Card className="shadow-sm">
+        <CardHeader className="pb-3 border-b border-slate-100 dark:border-slate-800">
+          <CardTitle className="text-base font-bold flex items-center gap-2">
+            {hidden ? <ShieldOff className="w-4 h-4 text-slate-400" /> : <ShieldCheck className="w-4 h-4 text-emerald-500" />}
+            {t('settings.privacy')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-5 space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                {t('settings.hide_from_leaderboard')}
+              </p>
+              <p className="text-xs text-slate-400">{t('settings.hide_from_leaderboard_desc')}</p>
+            </div>
+            <button
+              onClick={togglePrivacy}
+              disabled={privacySaving}
+              className={`relative w-12 h-6 rounded-full transition-colors duration-200 shrink-0 ${
+                hidden ? 'bg-slate-300 dark:bg-slate-600' : 'bg-emerald-500'
+              } ${privacySaving ? 'opacity-50 cursor-wait' : 'cursor-pointer'}`}
+              role="switch"
+              aria-checked={hidden}
+            >
+              <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all duration-200 ${
+                hidden ? 'start-0.5' : 'start-6'
+              }`} />
+            </button>
+          </div>
+          <div className={`flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-lg ${
+            hidden
+              ? 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+              : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400'
+          }`}>
+            {hidden ? <ShieldOff className="w-3.5 h-3.5" /> : <ShieldCheck className="w-3.5 h-3.5" />}
+            {hidden ? t('settings.privacy_hidden') : t('settings.privacy_visible')}
           </div>
         </CardContent>
       </Card>

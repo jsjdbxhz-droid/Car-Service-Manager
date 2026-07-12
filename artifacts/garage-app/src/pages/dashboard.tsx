@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText, Users, DollarSign, Activity } from 'lucide-react';
 import { Link } from 'wouter';
 import { Skeleton } from '@/components/ui/skeleton';
+import { LeaderboardCard } from '@/components/leaderboard-card';
 
 export default function Dashboard() {
   const { t } = useI18n();
@@ -77,7 +78,10 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div className="mt-8">
+      {/* Leaderboard */}
+      <LeaderboardCard />
+
+      <div className="mt-4">
         <div className="flex items-center gap-2 mb-4">
           <Activity className="w-5 h-5 text-primary" />
           <h2 className="text-xl font-bold text-slate-900 dark:text-white">

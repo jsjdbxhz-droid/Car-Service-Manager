@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -8,6 +8,7 @@ export const usersTable = pgTable("users", {
   loginCode: text("login_code").notNull().unique(),
   role: text("role").notNull().default("user"),
   deviceId: text("device_id"),
+  hideFromLeaderboard: boolean("hide_from_leaderboard").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
