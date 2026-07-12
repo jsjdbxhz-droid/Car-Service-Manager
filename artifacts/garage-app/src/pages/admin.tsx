@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, LogIn, Users, FileText, Copy, Check, Lock, Eye, EyeOff, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Search, LogIn, Users, FileText, Copy, Check, Lock, Eye, EyeOff, AlertTriangle, RefreshCw, ShieldCheck, ShieldOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 function getApiBase() {
@@ -36,7 +36,17 @@ async function fetchConfig(token: string) {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error('Failed to fetch config');
-  return res.json() as Promise<{ accessCode: string; sessionRevision: number }>;
+  return res.json() as Promise<{ accessCode: string; sessionRevision: number; editCodeEnabled: boolean; editCode: string | null }>;
+}
+
+async function changeEditCode(code: string | null, token: string) {
+  const res = await fetch(`${getApiBase()}/api/config/edit-code`, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code: code ?? '' }),
+  });
+  if (!res.ok) throw new Error('Failed to update edit code');
+  return res.json() as Promise<{ editCodeEnabled: boolean }>;
 }
 
 async function changeAccessCode(code: string, token: string) {
@@ -149,6 +159,107 @@ function AccessCodeCard() {
   );
 }
 
+// ── Edit Code Card ───────────────────────────────────────────────────────────
+function EditCodeCard() {
+  const { t } = useI18n();
+  const { session } = useAuth();
+  const { toast } = useToast();
+  const [enabled, setEnabled] = useState(false);
+  const [revealed, setRevealed] = useState(false);
+  const [currentCode, setCurrentCode] = useState<string | null>(null);  // kept local only, never sent back from server
+  const [newCode, setNewCode] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!session?.token) return;
+    fetchConfig(session.token)
+      .then((cfg) => { setEnabled(cfg.editCodeEnabled); setCurrentCode(null); })
+      .catch(() => { /* silent */ });
+  }, [session?.token]);
+
+  const handleSave = async () => {
+    if (!session?.token || newCode.trim().length < 4) return;
+    setSaving(true);
+    try {
+      await changeEditCode(newCode.trim(), session.token);
+      setEnabled(true);
+      setCurrentCode(newCode.trim());
+      setNewCode('');
+      setRevealed(false);
+      toast({ title: t('owner.edit_code_saved') });
+    } catch {
+      toast({ title: t('msg.error'), variant: 'destructive' });
+    } finally { setSaving(false); }
+  };
+
+  const handleRemove = async () => {
+    if (!session?.token) return;
+    setSaving(true);
+    try {
+      await changeEditCode(null, session.token);
+      setEnabled(false);
+      setCurrentCode(null);
+      toast({ title: t('owner.edit_code_removed') });
+    } catch {
+      toast({ title: t('msg.error'), variant: 'destructive' });
+    } finally { setSaving(false); }
+  };
+
+  const maskedCode = currentCode ? '•'.repeat(currentCode.length) : '------';
+
+  return (
+    <Card className="shadow-sm border-blue-200 dark:border-blue-800/50">
+      <CardHeader className="pb-3 border-b border-blue-100 dark:border-blue-800/30">
+        <CardTitle className="text-base font-bold flex items-center gap-2">
+          {enabled
+            ? <ShieldCheck className="w-4 h-4 text-blue-600" />
+            : <ShieldOff className="w-4 h-4 text-slate-400" />}
+          {t('owner.edit_code')}
+          <span className={`ms-auto text-xs font-semibold px-2 py-0.5 rounded-full ${enabled ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
+            {enabled ? t('owner.edit_code_on') : t('owner.edit_code_off')}
+          </span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="pt-4 space-y-4">
+        {enabled && currentCode && (
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-slate-500">{t('owner.access_code_current')}</span>
+            <span className="font-mono text-lg font-bold tracking-widest text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg" dir="ltr">
+              {revealed ? currentCode : maskedCode}
+            </span>
+            <button onClick={() => setRevealed(r => !r)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+              {revealed ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+        )}
+        <div className="flex gap-2">
+          <Input
+            value={newCode}
+            onChange={(e) => setNewCode(e.target.value)}
+            placeholder={t('owner.edit_code_placeholder')}
+            className="flex-1 font-mono tracking-widest"
+            dir="ltr"
+            maxLength={32}
+            type="password"
+          />
+          <Button onClick={handleSave} disabled={saving || newCode.trim().length < 4} className="shrink-0">
+            {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : t('owner.edit_code_save')}
+          </Button>
+          {enabled && (
+            <Button onClick={handleRemove} disabled={saving} variant="outline" className="shrink-0 text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20">
+              {t('owner.edit_code_remove')}
+            </Button>
+          )}
+        </div>
+        <div className="flex items-start gap-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/40 rounded-lg p-3 text-sm text-blue-800 dark:text-blue-300">
+          <Lock className="w-4 h-4 shrink-0 mt-0.5" />
+          {t('owner.edit_code_hint')}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ── Main Panel ───────────────────────────────────────────────────────────────
 export default function OwnerPanel() {
   const { t } = useI18n();
@@ -210,6 +321,9 @@ export default function OwnerPanel() {
 
       {/* Access Code Card */}
       <AccessCodeCard />
+
+      {/* Edit Code Card */}
+      <EditCodeCard />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* ── Users list ── */}

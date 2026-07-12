@@ -18,6 +18,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { EditSecretDialog } from '@/components/edit-secret-dialog';
+import { useEditSecret } from '@/hooks/use-edit-secret';
 
 export default function RecordsList() {
   const [search, setSearch] = useState('');
@@ -29,6 +31,8 @@ export default function RecordsList() {
   const queryClient = useQueryClient();
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const deleteMutation = useDeleteRecord();
+
+  const { editSecretOpen, editTarget, requestEdit, closeEditSecret, confirmEdit } = useEditSecret();
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,7 +151,10 @@ export default function RecordsList() {
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setLocation(`/records/${record.id}/edit`)}>
+                      <Button
+                        variant="ghost" size="icon" className="h-8 w-8"
+                        onClick={() => requestEdit(`/records/${record.id}/edit`, setLocation)}
+                      >
                         <Edit className="w-4 h-4 text-blue-500" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDeleteId(record.id)}>
@@ -168,6 +175,7 @@ export default function RecordsList() {
         </Table>
       </div>
 
+      {/* Delete confirm */}
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -184,6 +192,13 @@ export default function RecordsList() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit secret dialog */}
+      <EditSecretDialog
+        open={editSecretOpen}
+        onClose={closeEditSecret}
+        onSuccess={confirmEdit}
+      />
     </div>
   );
 }

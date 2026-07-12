@@ -7,7 +7,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Search, Eye, Trash2, FileText, Users } from 'lucide-react';
+import { Plus, Search, Eye, Edit, Trash2, FileText, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -18,6 +18,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { EditSecretDialog } from '@/components/edit-secret-dialog';
+import { useEditSecret } from '@/hooks/use-edit-secret';
 
 export default function InvoicesList() {
   const [search, setSearch] = useState('');
@@ -29,6 +31,8 @@ export default function InvoicesList() {
   const queryClient = useQueryClient();
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const deleteMutation = useDeleteInvoice();
+
+  const { editSecretOpen, requestEdit, closeEditSecret, confirmEdit } = useEditSecret();
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,7 +116,7 @@ export default function InvoicesList() {
               <TableHead className="font-bold text-slate-700 dark:text-slate-300 text-sm">{t('field.carType')}</TableHead>
               <TableHead className="font-bold text-slate-700 dark:text-slate-300 text-sm">{t('field.workshopName')}</TableHead>
               <TableHead className="font-bold text-slate-700 dark:text-slate-300 text-sm">{t('field.amount')}</TableHead>
-              <TableHead className="w-[90px]"></TableHead>
+              <TableHead className="w-[110px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -133,7 +137,13 @@ export default function InvoicesList() {
                   <TableCell>
                     <div className="flex justify-end gap-1">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setLocation(`/invoices/${inv.id}`)}>
-                        <Eye className="w-4 h-4 text-blue-500" />
+                        <Eye className="w-4 h-4 text-slate-500" />
+                      </Button>
+                      <Button
+                        variant="ghost" size="icon" className="h-8 w-8"
+                        onClick={() => requestEdit(`/invoices/${inv.id}/edit`, setLocation)}
+                      >
+                        <Edit className="w-4 h-4 text-blue-500" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDeleteId(inv.id)}>
                         <Trash2 className="w-4 h-4 text-red-500" />
@@ -153,6 +163,7 @@ export default function InvoicesList() {
         </Table>
       </div>
 
+      {/* Delete confirm */}
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -169,6 +180,13 @@ export default function InvoicesList() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit secret dialog */}
+      <EditSecretDialog
+        open={editSecretOpen}
+        onClose={closeEditSecret}
+        onSuccess={confirmEdit}
+      />
     </div>
   );
 }
