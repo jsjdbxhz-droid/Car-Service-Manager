@@ -1,3 +1,4 @@
+/* @refresh reset */
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 export type Language = 'ar' | 'en' | 'fr';
