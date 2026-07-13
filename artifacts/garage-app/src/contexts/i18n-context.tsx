@@ -63,6 +63,7 @@ const arTranslations: Translations = {
 
   // Customers
   'customers.add_new': 'إضافة زبون جديد',
+  'customers.search_btn': 'بحث',
   'customers.search_placeholder': 'بحث بالاسم أو اللقب...',
   'customers.filter_date': 'تصفية بتاريخ...',
   'customers.filter_apply': 'تطبيق',
@@ -287,6 +288,7 @@ const enTranslations: Translations = {
 
   // Customers
   'customers.add_new': 'Add New Customer',
+  'customers.search_btn': 'Search',
   'customers.search_placeholder': 'Search by first or last name...',
   'customers.filter_date': 'Filter by date...',
   'customers.filter_apply': 'Apply',
@@ -489,6 +491,7 @@ const frTranslations: Translations = {
 
   // Customers
   'customers.add_new': 'Ajouter un client',
+  'customers.search_btn': 'Rechercher',
   'customers.search_placeholder': 'Rechercher par prénom ou nom...',
   'customers.filter_date': 'Filtrer par date...',
   'customers.filter_apply': 'Appliquer',

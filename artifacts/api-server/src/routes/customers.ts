@@ -29,8 +29,10 @@ function formatRecord(r: typeof recordsTable.$inferSelect, username: string) {
 
 // GET /api/customers — unique customers grouped by firstName+lastName
 router.get("/", requireAuth, async (req, res) => {
-  const { search, deviceId, date } = req.query as {
+  const { search, firstName: firstNameParam, lastName: lastNameParam, deviceId, date } = req.query as {
     search?: string;
+    firstName?: string;
+    lastName?: string;
     deviceId?: string;
     date?: string;
   };
@@ -47,7 +49,15 @@ router.get("/", requireAuth, async (req, res) => {
 
   const conditions: any[] = [inArray(recordsTable.userId, userIds)];
 
-  if (search) {
+  // Two-field search: match firstName AND lastName separately
+  if (firstNameParam) {
+    conditions.push(ilike(recordsTable.firstName, `%${firstNameParam}%`));
+  }
+  if (lastNameParam) {
+    conditions.push(ilike(recordsTable.lastName, `%${lastNameParam}%`));
+  }
+  // Legacy single-field search (OR match)
+  if (search && !firstNameParam && !lastNameParam) {
     conditions.push(
       or(
         ilike(recordsTable.firstName, `%${search}%`),

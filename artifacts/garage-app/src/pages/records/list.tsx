@@ -39,10 +39,13 @@ function formatDate(isoStr: string | null, lang: string) {
 }
 
 export default function RecordsList() {
-  const [search, setSearch] = useState('');
-  const [submittedSearch, setSubmittedSearch] = useState('');
-  const [dateFilter, setDateFilter] = useState('');
-  const [appliedDate, setAppliedDate] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName]   = useState('');
+  const [searchFirst, setSearchFirst] = useState('');
+  const [searchLast,  setSearchLast]  = useState('');
+
+  const [dateFilter,   setDateFilter]   = useState('');
+  const [appliedDate,  setAppliedDate]  = useState('');
 
   const [, setLocation] = useLocation();
   const { t, language } = useI18n();
@@ -51,12 +54,13 @@ export default function RecordsList() {
   const base = ((import.meta.env.BASE_URL as string | undefined) ?? '').replace(/\/$/, '');
 
   const { data: customers, isLoading } = useQuery<Customer[]>({
-    queryKey: ['customers', submittedSearch, appliedDate, deviceId],
+    queryKey: ['customers', searchFirst, searchLast, appliedDate, deviceId],
     queryFn: async () => {
       const qp = new URLSearchParams();
-      if (submittedSearch) qp.set('search', submittedSearch);
-      if (appliedDate) qp.set('date', appliedDate);
-      if (deviceId) qp.set('deviceId', deviceId);
+      if (searchFirst) qp.set('firstName', searchFirst);
+      if (searchLast)  qp.set('lastName',  searchLast);
+      if (appliedDate) qp.set('date',       appliedDate);
+      if (deviceId)    qp.set('deviceId',   deviceId);
       const res = await fetch(`${base}/api/customers?${qp}`, {
         headers: { Authorization: `Bearer ${session?.token}` },
       });
@@ -66,18 +70,15 @@ export default function RecordsList() {
     enabled: !!session?.token,
   });
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
+  const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmittedSearch(search);
+    setSearchFirst(firstName.trim());
+    setSearchLast(lastName.trim());
   };
 
-  const handleDateApply = () => {
-    setAppliedDate(dateFilter);
-  };
-
-  const goToCustomer = (firstName: string, lastName: string) => {
-    const qp = new URLSearchParams({ first: firstName, last: lastName });
-    setLocation(`/customers/records?${qp}`);
+  const clearSearch = () => {
+    setFirstName(''); setLastName('');
+    setSearchFirst(''); setSearchLast('');
   };
 
   const isRtl = language === 'ar';
@@ -85,66 +86,76 @@ export default function RecordsList() {
 
   return (
     <div className="space-y-4">
-      {/* ── Toolbar ── */}
-      <div className="flex flex-wrap gap-2 items-center">
-        {/* View selector */}
-        <div className="flex rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0">
-          <button className="flex items-center gap-1.5 px-3 py-2 text-sm font-bold bg-primary text-primary-foreground">
-            <Users className="w-4 h-4" />
-            {t('records.view')}
-          </button>
-          <button
-            onClick={() => setLocation('/invoices')}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-s border-slate-200 dark:border-slate-700"
-          >
-            <FileText className="w-4 h-4" />
-            {t('invoices.view')}
-          </button>
-        </div>
+      {/* ── View tabs ── */}
+      <div className="flex rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden w-fit">
+        <button className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold bg-primary text-primary-foreground">
+          <Users className="w-4 h-4" />
+          {t('records.view')}
+        </button>
+        <button
+          onClick={() => setLocation('/invoices')}
+          className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-s border-slate-200 dark:border-slate-700"
+        >
+          <FileText className="w-4 h-4" />
+          {t('invoices.view')}
+        </button>
+      </div>
 
-        {/* Name search */}
-        <form onSubmit={handleSearchSubmit} className="flex flex-1 min-w-[160px] gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <Input
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                if (!e.target.value) setSubmittedSearch('');
-              }}
-              placeholder={t('customers.search_placeholder')}
-              className="ps-9 h-10"
-            />
-          </div>
-          <Button type="submit" variant="secondary" size="sm" className="h-10 px-3">
-            <Search className="w-4 h-4" />
+      {/* ── Search row: two fields ── */}
+      <form onSubmit={handleSearch} className="flex flex-wrap gap-2 items-end">
+        <div className="flex-1 min-w-[120px]">
+          <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 ms-0.5">
+            {t('field.firstName')}
+          </label>
+          <Input
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            placeholder={language === 'ar' ? 'الاسم...' : language === 'fr' ? 'Prénom...' : 'First name...'}
+            className="h-10"
+            style={{ userSelect: 'text', WebkitUserSelect: 'text' }}
+          />
+        </div>
+        <div className="flex-1 min-w-[120px]">
+          <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 ms-0.5">
+            {t('field.lastName')}
+          </label>
+          <Input
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            placeholder={language === 'ar' ? 'اللقب...' : language === 'fr' ? 'Nom...' : 'Last name...'}
+            className="h-10"
+            style={{ userSelect: 'text', WebkitUserSelect: 'text' }}
+          />
+        </div>
+        <div className="flex gap-2 shrink-0">
+          <Button type="submit" variant="secondary" className="h-10 px-4">
+            <Search className="w-4 h-4 me-1.5" />
+            {t('customers.search_btn')}
           </Button>
-        </form>
+          {(searchFirst || searchLast) && (
+            <Button type="button" variant="ghost" className="h-10 px-3 text-slate-500" onClick={clearSearch}>
+              ✕
+            </Button>
+          )}
+        </div>
 
         {/* Add buttons */}
         <div className="flex gap-2 shrink-0">
-          <Button
-            onClick={() => setLocation('/records/new')}
-            variant="outline"
-            className="h-10 font-semibold"
-          >
+          <Button type="button" variant="outline" onClick={() => setLocation('/records/new')} className="h-10 font-semibold">
             <Plus className="w-4 h-4 me-1.5" />
             {t('records.add_new')}
           </Button>
-          <Button
-            onClick={() => setLocation('/records/new')}
-            className="h-10 font-semibold"
-          >
+          <Button type="button" onClick={() => setLocation('/records/new')} className="h-10 font-semibold">
             <Plus className="w-4 h-4 me-1.5" />
             {t('customers.add_new')}
           </Button>
         </div>
-      </div>
+      </form>
 
-      {/* Date filter row */}
+      {/* ── Date filter ── */}
       <div className="flex gap-2 items-center">
-        <div className="relative max-w-xs flex-1">
-          <CalendarDays className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <div className="relative max-w-xs">
+          <CalendarDays className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
           <Input
             type="date"
             value={dateFilter}
@@ -152,21 +163,19 @@ export default function RecordsList() {
               setDateFilter(e.target.value);
               if (!e.target.value) setAppliedDate('');
             }}
-            placeholder={t('customers.filter_date')}
             className="ps-9 h-10"
             dir="ltr"
+            style={{ userSelect: 'text', WebkitUserSelect: 'text' }}
           />
         </div>
-        {dateFilter && (
-          <Button variant="secondary" size="sm" className="h-10" onClick={handleDateApply}>
+        {dateFilter && !appliedDate && (
+          <Button variant="secondary" size="sm" className="h-10" onClick={() => setAppliedDate(dateFilter)}>
             {t('customers.filter_apply')}
           </Button>
         )}
         {appliedDate && (
           <Button
-            variant="ghost"
-            size="sm"
-            className="h-10 text-slate-500"
+            variant="ghost" size="sm" className="h-10 text-slate-500"
             onClick={() => { setDateFilter(''); setAppliedDate(''); }}
           >
             ✕ {t('customers.filter_clear')}
@@ -180,44 +189,51 @@ export default function RecordsList() {
           <div className="py-16 text-center text-slate-400">...</div>
         ) : customers && customers.length > 0 ? (
           <ul className="divide-y divide-slate-100 dark:divide-slate-800">
-            {customers.map((c) => (
-              <li key={`${c.firstName}-${c.lastName}`}>
-                <button
-                  className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors text-start"
-                  onClick={() => goToCustomer(c.firstName, c.lastName)}
-                >
-                  {/* Avatar */}
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <span className="text-sm font-bold text-primary">
-                      {c.firstName.charAt(0)}{c.lastName.charAt(0)}
-                    </span>
-                  </div>
-
-                  {/* Name + last visit */}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-slate-900 dark:text-white text-base truncate">
-                      {c.firstName} {c.lastName}
-                    </p>
-                    <p className="text-sm text-slate-500 truncate">
-                      {formatDate(c.lastVisit, language)}
-                    </p>
-                  </div>
-
-                  {/* Visit count badge */}
-                  <span
-                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold shrink-0 ${
-                      c.visitCount >= 3
-                        ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-                        : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                    }`}
+            {customers.map((c) => {
+              const qp = new URLSearchParams({ first: c.firstName, last: c.lastName });
+              return (
+                <li key={`${c.firstName}-${c.lastName}`}>
+                  {/* Use <a> instead of <button> so browser doesn't apply user-select:none to text */}
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                    onClick={() => setLocation(`/customers/records?${qp}`)}
+                    onKeyDown={(e) => e.key === 'Enter' && setLocation(`/customers/records?${qp}`)}
                   >
-                    {c.visitCount}× {t('records.visit_count')}
-                  </span>
+                    {/* Avatar */}
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 select-none">
+                      <span className="text-sm font-bold text-primary">
+                        {c.firstName.charAt(0)}{c.lastName.charAt(0)}
+                      </span>
+                    </div>
 
-                  <ChevronEnd className="w-4 h-4 text-slate-400 shrink-0" />
-                </button>
-              </li>
-            ))}
+                    {/* Name + last visit */}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-slate-900 dark:text-white text-base truncate">
+                        {c.firstName} {c.lastName}
+                      </p>
+                      <p className="text-sm text-slate-500 truncate">
+                        {formatDate(c.lastVisit, language)}
+                      </p>
+                    </div>
+
+                    {/* Visit count badge */}
+                    <span
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold shrink-0 select-none ${
+                        c.visitCount >= 3
+                          ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+                          : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                      }`}
+                    >
+                      {c.visitCount}× {t('records.visit_count')}
+                    </span>
+
+                    <ChevronEnd className="w-4 h-4 text-slate-400 shrink-0 select-none" />
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         ) : (
           <div className="py-16 text-center text-slate-500 dark:text-slate-400">
