@@ -13,8 +13,8 @@ A full-stack garage management app for recording vehicle service invoices and tr
 ## Running the project
 
 Both workflows start automatically:
-- **Garage Manager** (frontend) — `pnpm --filter @workspace/garage-app run dev`
-- **API Server** (backend) — `pnpm --filter @workspace/api-server run dev`
+- **Garage Manager** (frontend) — `PORT=5173 BASE_PATH=/ pnpm --filter @workspace/garage-app run dev`
+- **API Server** (backend) — `PORT=8080 pnpm --filter @workspace/api-server run dev`
 
 ## Database
 
