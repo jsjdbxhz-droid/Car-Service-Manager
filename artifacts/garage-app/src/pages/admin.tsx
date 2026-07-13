@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, LogIn, Users, FileText, Copy, Check, Lock, Eye, EyeOff, AlertTriangle, RefreshCw, ShieldCheck, ShieldOff, UserX, UserCheck, BadgeCheck, BadgeX } from 'lucide-react';
+import { Search, LogIn, Users, FileText, Copy, Check, Lock, Eye, EyeOff, AlertTriangle, RefreshCw, ShieldCheck, ShieldOff, UserX, UserCheck, BadgeCheck, BadgeX, AlertOctagon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 function getApiBase() {
@@ -514,6 +514,18 @@ export default function OwnerPanel() {
                         <p className="text-[10px] text-slate-400 mt-0.5" dir="ltr">
                           {new Date(user.createdAt).toLocaleDateString()} · {timeAgo(user.createdAt, language)}
                         </p>
+                        {/* Over-a-year unpaid warning */}
+                        {!isPaidNow && (Date.now() - new Date(user.createdAt).getTime()) >= 365 * 24 * 60 * 60 * 1000 && (
+                          <span className="inline-flex items-center gap-0.5 mt-1 px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-[10px] font-bold">
+                            <AlertOctagon className="w-2.5 h-2.5 shrink-0" />
+                            {language === 'ar'
+                              ? `${Math.floor((Date.now() - new Date(user.createdAt).getTime()) / (365 * 24 * 60 * 60 * 1000))} سنة بدون دفع`
+                              : language === 'fr'
+                                ? `${Math.floor((Date.now() - new Date(user.createdAt).getTime()) / (365 * 24 * 60 * 60 * 1000))} an(s) sans paiement`
+                                : `${Math.floor((Date.now() - new Date(user.createdAt).getTime()) / (365 * 24 * 60 * 60 * 1000))}yr unpaid`
+                            }
+                          </span>
+                        )}
                       </div>
                       <div className="flex flex-col gap-1">
                         {/* Paid toggle button (shown for all users) */}
