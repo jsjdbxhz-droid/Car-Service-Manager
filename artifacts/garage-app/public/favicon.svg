@@ -1,3 +1,23 @@
-<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="180" height="180" rx="36" fill="#FF3C00"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180">
+  <rect width="180" height="180" rx="36" fill="#0B3D91"/>
+  <circle cx="90" cy="70" r="48" fill="none" stroke="#29B6F6" stroke-width="5"/>
+  <path d="M45 88
+           L58 68
+           Q90 48 122 68
+           L135 88
+           L135 102
+           L45 102 Z"
+        fill="white"/>
+  <circle cx="62" cy="108" r="10" fill="#1F2937"/>
+  <circle cx="118" cy="108" r="10" fill="#1F2937"/>
+  <path d="M84 44
+           L130 90
+           M116 58
+           L130 90
+           L98 90"
+        stroke="#29B6F6"
+        stroke-width="12"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        fill="none"/>
 </svg>
