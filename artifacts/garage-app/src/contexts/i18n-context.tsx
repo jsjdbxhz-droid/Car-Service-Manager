@@ -70,6 +70,7 @@ const arTranslations: Translations = {
   'customers.filter_clear': 'إلغاء',
   'customers.empty': 'لا يوجد زبائن — أضف أمر إصلاح لإنشاء زبون',
   'customers.last_visit': 'آخر زيارة',
+  'invoices.invoice_count': 'فاتورة',
 
   // Invoices
   'invoices.title': 'الفواتير',
@@ -295,6 +296,7 @@ const enTranslations: Translations = {
   'customers.filter_clear': 'Clear',
   'customers.empty': 'No customers yet — add a repair order to create one',
   'customers.last_visit': 'Last visit',
+  'invoices.invoice_count': 'invoice',
 
   'invoices.title': 'Invoices',
   'invoices.search': 'Search...',
@@ -498,6 +500,7 @@ const frTranslations: Translations = {
   'customers.filter_clear': 'Effacer',
   'customers.empty': 'Aucun client — ajoutez un ordre de réparation pour créer un',
   'customers.last_visit': 'Dernière visite',
+  'invoices.invoice_count': 'facture',
 
   'invoices.title': 'Factures',
   'invoices.search': 'Recherche...',

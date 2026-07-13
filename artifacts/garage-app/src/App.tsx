@@ -22,6 +22,7 @@ import InvoiceDetail from '@/pages/invoices/detail';
 import OwnerPanel from '@/pages/admin';
 import Settings from '@/pages/settings';
 import CustomerDetail from '@/pages/customers/detail';
+import InvoiceCustomerDetail from '@/pages/customers/invoices-detail';
 import NotFound from '@/pages/not-found';
 
 import AppShell from '@/components/app-shell';
@@ -105,6 +106,7 @@ function Router() {
       <Route path="/invoices/:id/edit"><ProtectedRoute component={InvoiceForm} /></Route>
 
       <Route path="/customers/records"><ProtectedRoute component={CustomerDetail} /></Route>
+      <Route path="/invoices/customers"><ProtectedRoute component={InvoiceCustomerDetail} /></Route>
 
       <Route path="/admin"><OwnerRoute component={OwnerPanel} /></Route>
       <Route path="/settings"><ProtectedRoute component={Settings} /></Route>

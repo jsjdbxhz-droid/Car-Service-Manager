@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, invoicesTable, usersTable } from "@workspace/db";
-import { eq, or, ilike, and, inArray } from "drizzle-orm";
+import { eq, or, ilike, and, inArray, sql, desc } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth.js";
 
 const router = Router();
@@ -23,6 +23,86 @@ function formatInvoice(inv: typeof invoicesTable.$inferSelect, username: string)
     createdAt: inv.createdAt.toISOString(),
   };
 }
+
+// GET /api/invoices/customers — unique customers grouped by firstName+lastName
+router.get("/customers", requireAuth, async (req, res) => {
+  const { firstName: firstNameParam, lastName: lastNameParam, deviceId, date } = req.query as {
+    firstName?: string;
+    lastName?: string;
+    deviceId?: string;
+    date?: string;
+  };
+
+  let userIds: number[] = [req.userId!];
+  if (deviceId) {
+    const deviceUsers = await db
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(eq(usersTable.deviceId, deviceId));
+    userIds = deviceUsers.map((u) => u.id);
+    if (!userIds.includes(req.userId!)) userIds.push(req.userId!);
+  }
+
+  const conditions: any[] = [inArray(invoicesTable.userId, userIds)];
+  if (firstNameParam) conditions.push(ilike(invoicesTable.firstName, `%${firstNameParam}%`));
+  if (lastNameParam)  conditions.push(ilike(invoicesTable.lastName,  `%${lastNameParam}%`));
+  if (date)           conditions.push(sql`date(${invoicesTable.createdAt}) = ${date}::date`);
+
+  const rows = await db
+    .select({
+      firstName:    invoicesTable.firstName,
+      lastName:     invoicesTable.lastName,
+      invoiceCount: sql<number>`count(*)::int`,
+      lastInvoice:  sql<string>`max(${invoicesTable.createdAt})`,
+    })
+    .from(invoicesTable)
+    .where(and(...conditions))
+    .groupBy(invoicesTable.firstName, invoicesTable.lastName)
+    .orderBy(desc(sql`max(${invoicesTable.createdAt})`));
+
+  res.json(rows);
+});
+
+// GET /api/invoices/customers/detail — all invoices for one customer
+router.get("/customers/detail", requireAuth, async (req, res) => {
+  const { firstName, lastName, deviceId, date } = req.query as {
+    firstName?: string;
+    lastName?: string;
+    deviceId?: string;
+    date?: string;
+  };
+
+  if (!firstName || !lastName) {
+    res.status(400).json({ error: "firstName and lastName are required" });
+    return;
+  }
+
+  let userIds: number[] = [req.userId!];
+  if (deviceId) {
+    const deviceUsers = await db
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(eq(usersTable.deviceId, deviceId));
+    userIds = deviceUsers.map((u) => u.id);
+    if (!userIds.includes(req.userId!)) userIds.push(req.userId!);
+  }
+
+  const conditions: any[] = [
+    inArray(invoicesTable.userId, userIds),
+    eq(invoicesTable.firstName, firstName),
+    eq(invoicesTable.lastName,  lastName),
+  ];
+  if (date) conditions.push(sql`date(${invoicesTable.createdAt}) = ${date}::date`);
+
+  const results = await db
+    .select({ inv: invoicesTable, username: usersTable.username })
+    .from(invoicesTable)
+    .innerJoin(usersTable, eq(invoicesTable.userId, usersTable.id))
+    .where(and(...conditions))
+    .orderBy(desc(invoicesTable.createdAt));
+
+  res.json(results.map(({ inv, username }) => formatInvoice(inv, username)));
+});
 
 // GET /api/invoices
 router.get("/", requireAuth, async (req, res) => {
