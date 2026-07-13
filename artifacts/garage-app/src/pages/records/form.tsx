@@ -59,7 +59,7 @@ const formSchema = z.object({
   lastName:          z.string().min(1, 'مطلوب'),
   carType:           z.string().min(1, 'مطلوب'),
   licensePlate:      z.string().min(1, 'مطلوب'),
-  customerNumber:    z.string().optional(),
+  customerNumber:    z.string().min(1, 'مطلوب'),
   visitCount:        z.coerce.number().int().min(1),
   breakdownType:     z.string().min(1, 'مطلوب'),
   repairDescription: z.string().optional(),
@@ -220,10 +220,7 @@ export default function RecordForm() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField control={form.control} name="customerNumber" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {t('field.customerNumber')}
-                    <span className="ms-1 text-xs text-slate-400">({t('voice.optional')})</span>
-                  </FormLabel>
+                  <FormLabel>{t('field.customerNumber')}</FormLabel>
                   <FormControl><Input {...field} dir="ltr" className="text-end" /></FormControl>
                   <FormMessage />
                 </FormItem>
@@ -271,18 +268,7 @@ export default function RecordForm() {
                 <FormItem>
                   <FormLabel>{t('field.totalAmount_dzd')}</FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <Input
-                        type="number"
-                        min={0}
-                        step="1"
-                        {...field}
-                        className="pe-14"
-                      />
-                      <span className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none select-none">
-                        د.ج
-                      </span>
-                    </div>
+                    <Input type="number" min={0} step="1" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

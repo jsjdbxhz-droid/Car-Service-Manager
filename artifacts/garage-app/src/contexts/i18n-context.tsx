@@ -10,7 +10,7 @@ const arTranslations: Translations = {
   // App Shell
   'app.name': 'Car Service Manager',
   'nav.dashboard': 'لوحة القيادة',
-  'nav.records': 'استمارة',
+  'nav.records': 'order de reparation',
   'nav.invoices': 'الفواتير',
   'nav.owner': 'لوحة الأونر',
   'nav.admin': 'لوحة الأونر',
@@ -82,7 +82,7 @@ const arTranslations: Translations = {
   'field.breakdownType': 'نوع العطل',
   'field.totalAmount': 'المبلغ الاجمالي',
   'field.amount': 'المبلغ',
-  'field.customerNumber': 'رقم الزبون (اختياري)',
+  'field.customerNumber': 'رقم هاتف الزبون',
   'field.carType': 'نوع السيارة',
   'field.licensePlate': 'رقم اللوحة',
   'field.paymentMethod': 'طريقة الدفع',
@@ -195,7 +195,7 @@ const arTranslations: Translations = {
   'field.paymentStatus': 'حالة الدفع',
   'field.entryDate': 'تاريخ الدخول',
   'field.month': 'الشهر',
-  'field.totalAmount_dzd': 'المبلغ (د.ج)',
+  'field.totalAmount_dzd': 'المبلغ',
   'field.breakdownType_placeholder': 'صف نوع العطل...',
 
   // Voice input
@@ -218,7 +218,7 @@ const arTranslations: Translations = {
 const enTranslations: Translations = {
   'app.name': 'Car Service Manager',
   'nav.dashboard': 'Dashboard',
-  'nav.records': 'Records',
+  'nav.records': 'order de reparation',
   'nav.invoices': 'Invoices',
   'nav.owner': 'Owner Panel',
   'nav.admin': 'Owner Panel',
@@ -284,7 +284,7 @@ const enTranslations: Translations = {
   'field.breakdownType': 'Breakdown Type',
   'field.totalAmount': 'Total Amount',
   'field.amount': 'Amount',
-  'field.customerNumber': 'Customer Number (Optional)',
+  'field.customerNumber': 'رقم هاتف الزبون',
   'field.carType': 'Car Type',
   'field.licensePlate': 'License Plate',
   'field.paymentMethod': 'Payment Method',
@@ -401,7 +401,7 @@ const enTranslations: Translations = {
 const frTranslations: Translations = {
   'app.name': 'Car Service Manager',
   'nav.dashboard': 'Tableau de bord',
-  'nav.records': 'Dossiers',
+  'nav.records': 'order de reparation',
   'nav.invoices': 'Factures',
   'nav.owner': 'Panneau Propriétaire',
   'nav.admin': 'Panneau Propriétaire',
@@ -467,7 +467,7 @@ const frTranslations: Translations = {
   'field.breakdownType': 'Type de Panne',
   'field.totalAmount': 'Montant Total',
   'field.amount': 'Montant',
-  'field.customerNumber': 'Numéro Client (Optionnel)',
+  'field.customerNumber': 'رقم هاتف الزبون',
   'field.carType': 'Type de Voiture',
   'field.licensePlate': 'Plaque d\'Immatriculation',
   'field.paymentMethod': 'Mode de Paiement',

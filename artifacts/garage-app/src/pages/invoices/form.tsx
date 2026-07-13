@@ -30,7 +30,7 @@ const formSchema = z.object({
   breakdownType: z.string().min(1, 'Required'),
   paymentMethod: z.string().min(1, 'Required'),
   amount: z.coerce.number().min(0),
-  customerNumber: z.string().optional(),
+  customerNumber: z.string().min(1, 'Required'),
 });
 
 export default function InvoiceForm() {
