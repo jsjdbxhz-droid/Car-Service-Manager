@@ -11,7 +11,7 @@ const arTranslations: Translations = {
   // App Shell
   'app.name': 'Car Service Manager',
   'nav.dashboard': 'لوحة القيادة',
-  'nav.records': 'order de reparation',
+  'nav.records': 'أمر إصلاح',
   'nav.invoices': 'الفواتير',
   'nav.owner': 'لوحة الأونر',
   'nav.admin': 'لوحة الأونر',
@@ -219,7 +219,7 @@ const arTranslations: Translations = {
 const enTranslations: Translations = {
   'app.name': 'Car Service Manager',
   'nav.dashboard': 'Dashboard',
-  'nav.records': 'order de reparation',
+  'nav.records': 'Repair Order',
   'nav.invoices': 'Invoices',
   'nav.owner': 'Owner Panel',
   'nav.admin': 'Owner Panel',
@@ -402,7 +402,7 @@ const enTranslations: Translations = {
 const frTranslations: Translations = {
   'app.name': 'Car Service Manager',
   'nav.dashboard': 'Tableau de bord',
-  'nav.records': 'order de reparation',
+  'nav.records': 'Ordre de réparation',
   'nav.invoices': 'Factures',
   'nav.owner': 'Panneau Propriétaire',
   'nav.admin': 'Panneau Propriétaire',
