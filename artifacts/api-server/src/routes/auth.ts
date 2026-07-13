@@ -158,6 +158,36 @@ router.get("/me", requireAuth, async (req, res) => {
   });
 });
 
+// PUT /api/auth/username  { username: string }
+router.put("/username", requireAuth, async (req, res) => {
+  const { username } = req.body as { username?: string };
+  const trimmed = (username ?? "").trim();
+
+  if (trimmed.length < 2) {
+    res.status(400).json({ error: "username must be at least 2 characters" });
+    return;
+  }
+
+  // Check uniqueness
+  const [existing] = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(eq(usersTable.username, trimmed))
+    .limit(1);
+
+  if (existing && existing.id !== req.userId) {
+    res.status(409).json({ error: "Username already taken" });
+    return;
+  }
+
+  await db
+    .update(usersTable)
+    .set({ username: trimmed })
+    .where(eq(usersTable.id, req.userId!));
+
+  res.json({ ok: true, username: trimmed });
+});
+
 // POST /api/auth/logout
 router.post("/logout", (_req, res) => {
   res.json({ ok: true });

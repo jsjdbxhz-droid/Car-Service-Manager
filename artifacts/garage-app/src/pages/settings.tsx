@@ -3,8 +3,10 @@ import { useI18n } from '@/contexts/i18n-context';
 import { useAuth } from '@/contexts/auth-context';
 import { useGetMe, getGetMeQueryKey } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, EyeOff, Copy, Check, Globe, ShieldOff, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, Copy, Check, Globe, ShieldOff, ShieldCheck, Pencil, X, CheckCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 function getApiBase() {
   return ((import.meta.env.BASE_URL as string | undefined) ?? '').replace(/\/$/, '');
@@ -12,11 +14,17 @@ function getApiBase() {
 
 export default function Settings() {
   const { t, language, setLanguage } = useI18n();
-  const { session } = useAuth();
+  const { session, updateUsername } = useAuth();
+  const { toast } = useToast();
   const [showCode, setShowCode] = useState(false);
   const [copied, setCopied] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [privacySaving, setPrivacySaving] = useState(false);
+
+  // Username edit state
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [newUsername, setNewUsername] = useState('');
+  const [usernameSaving, setUsernameSaving] = useState(false);
 
   // Load current privacy setting from /me
   useEffect(() => {
@@ -30,6 +38,36 @@ export default function Settings() {
       })
       .catch(() => {});
   }, [session?.token]);
+
+  const handleSaveUsername = async () => {
+    const trimmed = newUsername.trim();
+    if (trimmed.length < 2) {
+      toast({ title: t('settings.username_short'), variant: 'destructive' });
+      return;
+    }
+    if (!session?.token) return;
+    setUsernameSaving(true);
+    try {
+      const res = await fetch(`${getApiBase()}/api/auth/username`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${session.token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: trimmed }),
+      });
+      if (res.status === 409) {
+        toast({ title: t('settings.username_taken'), variant: 'destructive' });
+        return;
+      }
+      if (!res.ok) throw new Error();
+      updateUsername(trimmed);
+      setEditingUsername(false);
+      setNewUsername('');
+      toast({ title: t('settings.username_saved') });
+    } catch {
+      toast({ title: 'msg.error', variant: 'destructive' });
+    } finally {
+      setUsernameSaving(false);
+    }
+  };
 
   const togglePrivacy = async () => {
     if (!session?.token || privacySaving) return;
@@ -72,9 +110,46 @@ export default function Settings() {
         </CardHeader>
         <CardContent className="pt-5 space-y-5">
           {/* Username */}
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">{t('auth.username')}</span>
-            <span className="font-black text-lg text-slate-900 dark:text-white">{session?.username}</span>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">{t('auth.username')}</span>
+              {!editingUsername ? (
+                <div className="flex items-center gap-2">
+                  <span className="font-black text-lg text-slate-900 dark:text-white">{session?.username}</span>
+                  <button
+                    onClick={() => { setEditingUsername(true); setNewUsername(session?.username ?? ''); }}
+                    className="p-1 text-slate-400 hover:text-primary transition-colors rounded"
+                    title={t('settings.change_username')}
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <Input
+                    value={newUsername}
+                    onChange={(e) => setNewUsername(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') void handleSaveUsername(); if (e.key === 'Escape') setEditingUsername(false); }}
+                    className="h-8 text-sm w-36"
+                    autoFocus
+                    disabled={usernameSaving}
+                  />
+                  <button
+                    onClick={() => void handleSaveUsername()}
+                    disabled={usernameSaving || !newUsername.trim()}
+                    className="p-1 text-emerald-600 hover:text-emerald-700 transition-colors disabled:opacity-40"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => { setEditingUsername(false); setNewUsername(''); }}
+                    className="p-1 text-slate-400 hover:text-red-500 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Role */}
