@@ -12,8 +12,8 @@ Frontend sends `Authorization: Bearer <token>` on every request.
 
 **How to apply:** Any new route that needs auth calls `requireAuth` middleware. Token verification is centralized in `lib/token.ts` — never call `parseInt(token)` directly.
 
-## Admin role
-Username "زكرياء" (or "zakariyaa"/"zakariya") → role "admin" on registration. Admin list-users response masks loginCode as "***".
+## Owner role
+Username "زكرياء" (Arabic only) → role "owner" on first-ever registration. No other variant accepted. Admin list-users response masks loginCode as "***".
 
 **Why:** Per user requirement: admin is always "زكرياء". Masking loginCode prevents admins from impersonating users.
 

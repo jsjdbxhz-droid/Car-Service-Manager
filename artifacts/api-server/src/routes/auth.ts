@@ -61,7 +61,7 @@ router.post("/register", async (req, res) => {
   // Owner bootstrap: only the first-ever registration with the owner username
   // gets the owner role. Once an owner exists in the DB, no further self-promotion
   // is possible through registration — any subsequent registrant gets "user".
-  const OWNER_USERNAMES = ["زكرياء", "zakariyaa", "zakariya"];
+  const OWNER_USERNAMES = ["زكرياء"];
   const isOwnerUsername = OWNER_USERNAMES.some(
     (n) => n === trimmed || n === trimmed.toLowerCase(),
   );
