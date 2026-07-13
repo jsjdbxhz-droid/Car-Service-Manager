@@ -7,6 +7,7 @@ import adminRouter from "./admin.js";
 import statsRouter from "./stats.js";
 import configRouter from "./config.js";
 import leaderboardRouter from "./leaderboard.js";
+import customersRouter from "./customers.js";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use("/admin", adminRouter);
 router.use("/stats", statsRouter);
 router.use("/config", configRouter);
 router.use("/leaderboard", leaderboardRouter);
+router.use("/customers", customersRouter);
 
 export default router;

@@ -261,7 +261,7 @@ export default function RecordForm() {
               )} />
             </div>
 
-            {/* Row 3: رقم الزبون + عدد مرات الدخول (new entry: readonly badge) */}
+            {/* Row 3: رقم الزبون + عدد الزيارات (read-only, auto-computed) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField control={form.control} name="customerNumber" render={({ field }) => (
                 <FormItem>
@@ -270,15 +270,21 @@ export default function RecordForm() {
                   <FormMessage />
                 </FormItem>
               )} />
-              <FormField control={form.control} name="visitCount" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('field.visitCount')}</FormLabel>
-                  <FormControl>
-                    <Input type="number" min={1} step={1} {...field} dir="ltr" className="text-start" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+              {isEdit && (
+                <div className="flex flex-col gap-2">
+                  <span className="text-sm font-medium leading-none">{t('field.visitCount')}</span>
+                  <div className="h-10 flex items-center px-3 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 select-none">
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold ${
+                      (form.getValues('visitCount') ?? 0) >= 3
+                        ? 'bg-orange-100 text-orange-700'
+                        : 'bg-blue-100 text-blue-700'
+                    }`}>
+                      {form.getValues('visitCount') ?? 1}× {t('records.visit_count')}
+                    </span>
+                    <span className="ms-2 text-xs text-slate-400">{t('records.visit_count_auto')}</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* نوع العطل */}

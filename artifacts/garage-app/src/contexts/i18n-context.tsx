@@ -57,8 +57,18 @@ const arTranslations: Translations = {
   'records.delete': 'حذف',
   'records.save': 'حفظ الاستمارة',
   'records.visit_count': 'زيارة',
-  'records.view': 'سجلات',
+  'records.visit_count_auto': 'تلقائي',
+  'records.view': 'الزبائن',
   'invoices.view': 'فواتير',
+
+  // Customers
+  'customers.add_new': 'إضافة زبون جديد',
+  'customers.search_placeholder': 'بحث بالاسم أو اللقب...',
+  'customers.filter_date': 'تصفية بتاريخ...',
+  'customers.filter_apply': 'تطبيق',
+  'customers.filter_clear': 'إلغاء',
+  'customers.empty': 'لا يوجد زبائن — أضف أمر إصلاح لإنشاء زبون',
+  'customers.last_visit': 'آخر زيارة',
 
   // Invoices
   'invoices.title': 'الفواتير',
@@ -271,8 +281,18 @@ const enTranslations: Translations = {
   'records.delete': 'Delete',
   'records.save': 'Save Record',
   'records.visit_count': 'visit',
-  'records.view': 'Records',
+  'records.visit_count_auto': 'auto',
+  'records.view': 'Customers',
   'invoices.view': 'Invoices',
+
+  // Customers
+  'customers.add_new': 'Add New Customer',
+  'customers.search_placeholder': 'Search by first or last name...',
+  'customers.filter_date': 'Filter by date...',
+  'customers.filter_apply': 'Apply',
+  'customers.filter_clear': 'Clear',
+  'customers.empty': 'No customers yet — add a repair order to create one',
+  'customers.last_visit': 'Last visit',
 
   'invoices.title': 'Invoices',
   'invoices.search': 'Search...',
@@ -463,8 +483,18 @@ const frTranslations: Translations = {
   'records.delete': 'Supprimer',
   'records.save': 'Enregistrer',
   'records.visit_count': 'visite',
-  'records.view': 'Dossiers',
+  'records.visit_count_auto': 'auto',
+  'records.view': 'Clients',
   'invoices.view': 'Factures',
+
+  // Customers
+  'customers.add_new': 'Ajouter un client',
+  'customers.search_placeholder': 'Rechercher par prénom ou nom...',
+  'customers.filter_date': 'Filtrer par date...',
+  'customers.filter_apply': 'Appliquer',
+  'customers.filter_clear': 'Effacer',
+  'customers.empty': 'Aucun client — ajoutez un ordre de réparation pour créer un',
+  'customers.last_visit': 'Dernière visite',
 
   'invoices.title': 'Factures',
   'invoices.search': 'Recherche...',

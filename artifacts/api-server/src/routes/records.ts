@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, recordsTable, usersTable } from "@workspace/db";
-import { eq, or, ilike, and, inArray } from "drizzle-orm";
+import { eq, or, ilike, and, inArray, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth.js";
 
 const router = Router();
@@ -64,6 +64,11 @@ router.get("/", requireAuth, async (req, res) => {
     );
   }
 
+  const { date } = req.query as { date?: string };
+  if (date) {
+    conditions.push(sql`date(${recordsTable.entryDate}) = ${date}::date` as any);
+  }
+
   const results = await query.where(and(...conditions)).orderBy(recordsTable.entryDate);
 
   res.json(results.map(({ record, username }) => formatRecord(record, username)));
@@ -83,9 +88,31 @@ router.post("/", requireAuth, async (req, res) => {
     carType: string;
     licensePlate: string;
     paymentStatus?: string;
-    visitCount?: number;
     entryDate?: string;
+    deviceId?: string;
   };
+
+  // Auto-calculate visitCount from existing records with same firstName+lastName
+  let userIds: number[] = [req.userId!];
+  if (body.deviceId) {
+    const deviceUsers = await db
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(eq(usersTable.deviceId, body.deviceId));
+    userIds = deviceUsers.map((u) => u.id);
+    if (!userIds.includes(req.userId!)) userIds.push(req.userId!);
+  }
+  const countResult = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(recordsTable)
+    .where(
+      and(
+        inArray(recordsTable.userId, userIds),
+        eq(recordsTable.firstName, body.firstName),
+        eq(recordsTable.lastName, body.lastName),
+      )
+    );
+  const visitCount = Number(countResult[0]?.count ?? 0) + 1;
 
   const [record] = await db
     .insert(recordsTable)
@@ -102,7 +129,7 @@ router.post("/", requireAuth, async (req, res) => {
       carType: body.carType,
       licensePlate: body.licensePlate,
       paymentStatus: body.paymentStatus || "unpaid",
-      visitCount: Math.max(1, Math.round(body.visitCount ?? 1)),
+      visitCount,
       entryDate: body.entryDate ? new Date(body.entryDate) : new Date(),
     })
     .returning();
@@ -157,7 +184,7 @@ router.put("/:id", requireAuth, async (req, res) => {
   if (body.carType !== undefined) update.carType = body.carType;
   if (body.licensePlate !== undefined) update.licensePlate = body.licensePlate;
   if (body.paymentStatus !== undefined) update.paymentStatus = body.paymentStatus;
-  if (body.visitCount !== undefined) update.visitCount = Math.max(1, Math.round(body.visitCount));
+  // visitCount is auto-computed on create; do not allow manual override on update
   if (body.entryDate !== undefined) update.entryDate = new Date(body.entryDate);
 
   const [record] = await db

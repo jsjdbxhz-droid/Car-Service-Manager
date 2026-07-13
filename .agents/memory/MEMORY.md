@@ -2,3 +2,4 @@
 - [GarageManager i18n](garage-i18n.md) — AR/EN/FR via React context; RTL set on html element for Arabic; language switcher in navbar.
 - [GarageManager leaderboard](garage-leaderboard.md) — GET /api/leaderboard (auth); PUT /api/leaderboard/privacy; hideFromLeaderboard column on users table; LeaderboardCard collapsible on dashboard; privacy toggle in settings.
 - [GarageManager edit-secret](garage-edit-secret.md) — GET /api/config/edit-code-enabled (public probe); POST /api/config/verify-edit-code (auth, separate rate-limit bucket); PUT /api/config/edit-code (admin); editCode stored in app_config; EditCodeCard in admin.tsx.
+- [GarageManager customers](garage-customers.md) — /api/customers (grouped by firstName+lastName); visitCount auto-computed server-side on POST; records list page shows customer list not individual records; customer detail at /customers/records?first=&last=.
