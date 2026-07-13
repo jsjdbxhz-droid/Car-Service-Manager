@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useI18n } from '@/contexts/i18n-context';
+import { useAuth } from '@/contexts/auth-context';
 import { useGetInvoice, useCreateInvoice, useUpdateInvoice, getListInvoicesQueryKey, getGetInvoiceQueryKey } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -27,6 +28,7 @@ const formSchema = z.object({
   carType: z.string().min(1, 'Required'),
   licensePlate: z.string().min(1, 'Required'),
   workshopName: z.string().min(1, 'Required'),
+  companyPhone: z.string().optional().default(''),
   breakdownType: z.string().min(1, 'Required'),
   paymentMethod: z.string().min(1, 'Required'),
   amount: z.coerce.number().min(0),
@@ -39,6 +41,7 @@ export default function InvoiceForm() {
   const isEdit = !!id;
   const [, setLocation] = useLocation();
   const { t, language } = useI18n();
+  const { session } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -56,7 +59,8 @@ export default function InvoiceForm() {
       lastName: '',
       carType: '',
       licensePlate: '',
-      workshopName: '',
+      workshopName: isEdit ? '' : (session?.companyName ?? ''),
+      companyPhone: isEdit ? '' : (session?.companyPhone ?? ''),
       breakdownType: '',
       paymentMethod: 'نقد / Espèce',
       amount: 0,
@@ -72,6 +76,7 @@ export default function InvoiceForm() {
         carType: invoice.carType,
         licensePlate: invoice.licensePlate,
         workshopName: invoice.workshopName,
+        companyPhone: invoice.companyPhone ?? '',
         breakdownType: invoice.breakdownType,
         paymentMethod: invoice.paymentMethod,
         amount: invoice.amount,
@@ -81,8 +86,9 @@ export default function InvoiceForm() {
   }, [invoice, form]);
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
+    const data = { ...values, companyPhone: values.companyPhone || undefined };
     if (isEdit) {
-      updateMutation.mutate({ id: id as number, data: values }, {
+      updateMutation.mutate({ id: id as number, data }, {
         onSuccess: (res) => {
           toast({ title: t('msg.success') });
           queryClient.invalidateQueries({ queryKey: getListInvoicesQueryKey() });
@@ -95,7 +101,7 @@ export default function InvoiceForm() {
         onError: () => toast({ title: t('msg.error'), variant: 'destructive' })
       });
     } else {
-      createMutation.mutate({ data: values }, {
+      createMutation.mutate({ data }, {
         onSuccess: (res) => {
           toast({ title: t('msg.success') });
           queryClient.invalidateQueries({ queryKey: getListInvoicesQueryKey() });
@@ -130,14 +136,16 @@ export default function InvoiceForm() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2 space-y-4">
-                <h3 className="font-semibold text-primary">{t('invoice.workshop_name')}</h3>
+            {/* Workshop / Company info */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-primary">{t('invoice.workshop_name')}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="workshopName"
                   render={({ field }) => (
                     <FormItem>
+                      <FormLabel>{t('company.name')}</FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Garage XYZ..." />
                       </FormControl>
@@ -145,9 +153,24 @@ export default function InvoiceForm() {
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={form.control}
+                  name="companyPhone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('company.phone')}</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="0550 123 456" dir="ltr" className="text-start" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
+            </div>
 
-              <div className="md:col-span-2 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2 mt-2">
                 <h3 className="font-semibold text-primary mb-2">{t('invoice.customer_info')}</h3>
               </div>
               

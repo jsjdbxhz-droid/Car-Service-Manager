@@ -1,10 +1,11 @@
 import { useI18n } from '@/contexts/i18n-context';
 import { useGetStats } from '@workspace/api-client-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { FileText, Users, DollarSign, Activity } from 'lucide-react';
 import { Link } from 'wouter';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LeaderboardCard } from '@/components/leaderboard-card';
+import { CompanySetupBanner } from '@/components/company-setup-banner';
 
 export default function Dashboard() {
   const { t } = useI18n();
@@ -41,6 +42,8 @@ export default function Dashboard() {
           {t('dashboard.title')}
         </h1>
       </div>
+
+      <CompanySetupBanner />
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

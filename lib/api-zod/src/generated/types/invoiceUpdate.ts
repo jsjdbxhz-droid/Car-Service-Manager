@@ -13,6 +13,7 @@ export interface InvoiceUpdate {
   carType?: string;
   licensePlate?: string;
   workshopName?: string;
+  companyPhone?: string;
   breakdownType?: string;
   paymentMethod?: string;
   amount?: number;

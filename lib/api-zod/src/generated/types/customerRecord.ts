@@ -10,6 +10,10 @@ export interface CustomerRecord {
   id: number;
   userId: number;
   username: string;
+  /** @nullable */
+  workshopName?: string | null;
+  /** @nullable */
+  companyPhone?: string | null;
   firstName: string;
   lastName: string;
   breakdownType: string;

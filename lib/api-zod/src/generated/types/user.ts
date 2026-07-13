@@ -14,5 +14,9 @@ export interface User {
   role: UserRole;
   /** @nullable */
   deviceId?: string | null;
+  /** @nullable */
+  companyName?: string | null;
+  /** @nullable */
+  companyPhone?: string | null;
   createdAt: string;
 }

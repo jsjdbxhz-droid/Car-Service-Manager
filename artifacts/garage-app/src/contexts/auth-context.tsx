@@ -9,6 +9,8 @@ export interface UserSession {
   username: string;
   role: UserRole;
   deviceId?: string;
+  companyName?: string;
+  companyPhone?: string;
 }
 
 interface AuthContextType {
@@ -20,6 +22,7 @@ interface AuthContextType {
   impersonate: (session: UserSession) => void;
   exitImpersonation: () => void;
   updateUsername: (username: string) => void;
+  updateCompany: (companyName: string, companyPhone: string) => void;
   isAuthenticated: boolean;
   isOwner: boolean;
   isImpersonating: boolean;
@@ -177,6 +180,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSession(updated);
   };
 
+  const updateCompany = (companyName: string, companyPhone: string) => {
+    if (!session) return;
+    const updated = { ...session, companyName, companyPhone };
+    localStorage.setItem(AUTH_KEY, JSON.stringify(updated));
+    setSession(updated);
+  };
+
   const isOwner =
     session?.role === 'owner' ||
     session?.role === 'admin' ||
@@ -193,6 +203,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         impersonate,
         exitImpersonation,
         updateUsername,
+        updateCompany,
         isAuthenticated: !!session,
         isOwner,
         isImpersonating: !!originalSession,

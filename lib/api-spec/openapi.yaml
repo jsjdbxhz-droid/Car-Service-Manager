@@ -89,6 +89,32 @@ paths:
         "401":
           description: Not authenticated
 
+  /auth/company:
+    put:
+      operationId: updateCompany
+      tags: [auth]
+      summary: Update company info
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanyInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                required:
+                  - ok
+        "401":
+          description: Not authenticated
+
   /auth/logout:
     post:
       operationId: logout
@@ -386,6 +412,10 @@ components:
           enum: [user, admin]
         deviceId:
           type: ["string", "null"]
+        companyName:
+          type: ["string", "null"]
+        companyPhone:
+          type: ["string", "null"]
         createdAt:
           type: string
       required:
@@ -438,6 +468,10 @@ components:
           type: integer
         username:
           type: string
+        workshopName:
+          type: ["string", "null"]
+        companyPhone:
+          type: ["string", "null"]
         firstName:
           type: string
         lastName:
@@ -469,6 +503,10 @@ components:
     RecordInput:
       type: object
       properties:
+        workshopName:
+          type: string
+        companyPhone:
+          type: string
         firstName:
           type: string
         lastName:
@@ -494,6 +532,10 @@ components:
     RecordUpdate:
       type: object
       properties:
+        workshopName:
+          type: string
+        companyPhone:
+          type: string
         firstName:
           type: string
         lastName:
@@ -530,6 +572,8 @@ components:
           type: string
         workshopName:
           type: string
+        companyPhone:
+          type: ["string", "null"]
         breakdownType:
           type: string
         paymentMethod:
@@ -567,6 +611,8 @@ components:
           type: string
         workshopName:
           type: string
+        companyPhone:
+          type: string
         breakdownType:
           type: string
         paymentMethod:
@@ -598,12 +644,22 @@ components:
           type: string
         workshopName:
           type: string
+        companyPhone:
+          type: string
         breakdownType:
           type: string
         paymentMethod:
           type: string
         amount:
           type: number
+
+    CompanyInput:
+      type: object
+      properties:
+        companyName:
+          type: string
+        companyPhone:
+          type: string
 
     Stats:
       type: object

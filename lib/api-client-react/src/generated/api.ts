@@ -21,6 +21,7 @@ import type {
 
 import type {
   AuthResponse,
+  CompanyInput,
   CustomerRecord,
   HealthStatus,
   Invoice,
@@ -33,6 +34,7 @@ import type {
   RecordUpdate,
   RegisterInput,
   Stats,
+  UpdateCompany200,
   User
 } from './api.schemas';
 
@@ -356,6 +358,76 @@ export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = Err
 
 
 
+
+export const getUpdateCompanyUrl = () => {
+
+
+
+
+  return `/api/auth/company`
+}
+
+/**
+ * @summary Update company info
+ */
+export const updateCompany = async (companyInput: CompanyInput, options?: RequestInit): Promise<UpdateCompany200> => {
+
+  return customFetch<UpdateCompany200>(getUpdateCompanyUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(companyInput)
+  }
+);}
+
+
+
+
+export const getUpdateCompanyMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCompany>>, TError,{data: BodyType<CompanyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateCompany>>, TError,{data: BodyType<CompanyInput>}, TContext> => {
+
+const mutationKey = ['updateCompany'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateCompany>>, {data: BodyType<CompanyInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateCompany(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateCompanyMutationResult = NonNullable<Awaited<ReturnType<typeof updateCompany>>>
+    export type UpdateCompanyMutationBody = BodyType<CompanyInput>
+    export type UpdateCompanyMutationError = ErrorType<void>
+
+    /**
+ * @summary Update company info
+ */
+export const useUpdateCompany = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCompany>>, TError,{data: BodyType<CompanyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateCompany>>,
+        TError,
+        {data: BodyType<CompanyInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateCompanyMutationOptions(options));
+    }
 
 export const getLogoutUrl = () => {
 

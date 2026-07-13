@@ -13,6 +13,8 @@ function formatRecord(
     id: r.id,
     userId: r.userId,
     username,
+    workshopName: r.workshopName,
+    companyPhone: r.companyPhone,
     firstName: r.firstName,
     lastName: r.lastName,
     breakdownType: r.breakdownType,
@@ -70,6 +72,8 @@ router.get("/", requireAuth, async (req, res) => {
 // POST /api/records
 router.post("/", requireAuth, async (req, res) => {
   const body = req.body as {
+    workshopName?: string;
+    companyPhone?: string;
     firstName: string;
     lastName: string;
     breakdownType: string;
@@ -87,6 +91,8 @@ router.post("/", requireAuth, async (req, res) => {
     .insert(recordsTable)
     .values({
       userId: req.userId!,
+      workshopName: body.workshopName || null,
+      companyPhone: body.companyPhone || null,
       firstName: body.firstName,
       lastName: body.lastName,
       breakdownType: body.breakdownType,
@@ -124,6 +130,8 @@ router.get("/:id", requireAuth, async (req, res) => {
 router.put("/:id", requireAuth, async (req, res) => {
   const id = parseInt(req.params["id"] as string, 10);
   const body = req.body as Partial<{
+    workshopName: string;
+    companyPhone: string;
     firstName: string;
     lastName: string;
     breakdownType: string;
@@ -138,6 +146,8 @@ router.put("/:id", requireAuth, async (req, res) => {
   }>;
 
   const update: Record<string, unknown> = {};
+  if (body.workshopName !== undefined) update.workshopName = body.workshopName || null;
+  if (body.companyPhone !== undefined) update.companyPhone = body.companyPhone || null;
   if (body.firstName !== undefined) update.firstName = body.firstName;
   if (body.lastName !== undefined) update.lastName = body.lastName;
   if (body.breakdownType !== undefined) update.breakdownType = body.breakdownType;

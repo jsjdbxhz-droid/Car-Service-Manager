@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useI18n } from '@/contexts/i18n-context';
+import { useAuth } from '@/contexts/auth-context';
 import {
   useGetRecord,
   useCreateRecord,
@@ -55,6 +56,8 @@ function getMonthName(dateStr: string, lang: string): string {
 
 // ── schema ───────────────────────────────────────────────────────────────────
 const formSchema = z.object({
+  workshopName:      z.string().optional().default(''),
+  companyPhone:      z.string().optional().default(''),
   firstName:         z.string().min(1, 'مطلوب'),
   lastName:          z.string().min(1, 'مطلوب'),
   carType:           z.string().min(1, 'مطلوب'),
@@ -77,6 +80,7 @@ export default function RecordForm() {
   const isEdit     = !!id;
   const [, setLocation] = useLocation();
   const { t, language } = useI18n();
+  const { session } = useAuth();
   const { toast }  = useToast();
   const queryClient = useQueryClient();
 
@@ -90,6 +94,8 @@ export default function RecordForm() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      workshopName: isEdit ? '' : (session?.companyName ?? ''),
+      companyPhone: isEdit ? '' : (session?.companyPhone ?? ''),
       firstName: '', lastName: '', carType: '', licensePlate: '',
       customerNumber: '', visitCount: 1, breakdownType: '', repairDescription: '',
       totalAmount: 0, paymentStatus: 'unpaid', entryDate: todayIso(),
@@ -100,6 +106,8 @@ export default function RecordForm() {
   useEffect(() => {
     if (record) {
       form.reset({
+        workshopName:      (record as typeof record & { workshopName?: string }).workshopName ?? '',
+        companyPhone:      (record as typeof record & { companyPhone?: string }).companyPhone ?? '',
         firstName:         record.firstName,
         lastName:          record.lastName,
         carType:           record.carType,
@@ -107,11 +115,11 @@ export default function RecordForm() {
         customerNumber:    record.customerNumber ?? '',
         visitCount:        (record as typeof record & { visitCount?: number }).visitCount ?? 1,
         breakdownType:     record.breakdownType,
-        repairDescription: record.repairDescription ?? '',
+        repairDescription: (record as typeof record & { repairDescription?: string }).repairDescription ?? '',
         totalAmount:       record.totalAmount,
-        paymentStatus:     (record.paymentStatus as 'unpaid' | 'paid' | 'partial') ?? 'unpaid',
-        entryDate:         record.entryDate
-          ? record.entryDate.slice(0, 10)
+        paymentStatus:     ((record as typeof record & { paymentStatus?: string }).paymentStatus as 'unpaid' | 'paid' | 'partial') ?? 'unpaid',
+        entryDate:         (record as typeof record & { entryDate?: string }).entryDate
+          ? (record as typeof record & { entryDate: string }).entryDate.slice(0, 10)
           : todayIso(),
       });
     }
@@ -123,6 +131,8 @@ export default function RecordForm() {
   const onSubmit = (values: FormValues) => {
     const payload = {
       ...values,
+      workshopName: values.workshopName || undefined,
+      companyPhone: values.companyPhone || undefined,
       totalAmount: Number(values.totalAmount),
       entryDate: values.entryDate,   // "YYYY-MM-DD" – server converts to Date
     };
@@ -159,13 +169,28 @@ export default function RecordForm() {
   const isPending = createMutation.isPending || updateMutation.isPending;
   const printAfterSave = useRef(false);
 
+  const watchedWorkshop = form.watch('workshopName');
+  const watchedPhone    = form.watch('companyPhone');
+
   if (isEdit && isLoading) return <div className="p-8 text-center text-slate-400">...</div>;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
 
+      {/* Print-only company header — appears at top of printed repair order */}
+      {(watchedWorkshop || watchedPhone) && (
+        <div className="hidden print:block mb-6 pb-4 border-b-2 border-slate-300">
+          {watchedWorkshop && (
+            <p className="text-2xl font-black text-slate-900">{watchedWorkshop}</p>
+          )}
+          {watchedPhone && (
+            <p className="text-base font-medium text-slate-600" dir="ltr">{watchedPhone}</p>
+          )}
+        </div>
+      )}
+
       {/* header */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 print:hidden">
         <Button variant="outline" size="icon" onClick={() => setLocation('/records')}>
           {language === 'ar' ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
         </Button>
@@ -177,6 +202,26 @@ export default function RecordForm() {
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+
+            {/* اسم الورشة + رقم الهاتف */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField control={form.control} name="workshopName" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('company.name')}</FormLabel>
+                  <FormControl><Input {...field} placeholder="Garage XYZ..." /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="companyPhone" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('company.phone')}</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="0550 123 456" dir="ltr" className="text-start" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            </div>
 
             {/* Row 1: الاسم + اللقب */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

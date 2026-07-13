@@ -7,6 +7,8 @@
  */
 
 export interface RecordInput {
+  workshopName?: string;
+  companyPhone?: string;
   firstName: string;
   lastName: string;
   breakdownType: string;

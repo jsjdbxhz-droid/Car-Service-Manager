@@ -16,6 +16,7 @@ function formatInvoice(inv: typeof invoicesTable.$inferSelect, username: string)
     carType: inv.carType,
     licensePlate: inv.licensePlate,
     workshopName: inv.workshopName,
+    companyPhone: inv.companyPhone,
     breakdownType: inv.breakdownType,
     paymentMethod: inv.paymentMethod,
     amount: Number(inv.amount),
@@ -70,6 +71,7 @@ router.post("/", requireAuth, async (req, res) => {
     carType: string;
     licensePlate: string;
     workshopName: string;
+    companyPhone?: string;
     breakdownType: string;
     paymentMethod: string;
     amount: number;
@@ -85,6 +87,7 @@ router.post("/", requireAuth, async (req, res) => {
       carType: body.carType,
       licensePlate: body.licensePlate,
       workshopName: body.workshopName,
+      companyPhone: body.companyPhone || null,
       breakdownType: body.breakdownType,
       paymentMethod: body.paymentMethod,
       amount: String(body.amount),
@@ -122,6 +125,7 @@ router.put("/:id", requireAuth, async (req, res) => {
     carType: string;
     licensePlate: string;
     workshopName: string;
+    companyPhone: string;
     breakdownType: string;
     paymentMethod: string;
     amount: number;
@@ -134,6 +138,7 @@ router.put("/:id", requireAuth, async (req, res) => {
   if (body.carType !== undefined) update.carType = body.carType;
   if (body.licensePlate !== undefined) update.licensePlate = body.licensePlate;
   if (body.workshopName !== undefined) update.workshopName = body.workshopName;
+  if (body.companyPhone !== undefined) update.companyPhone = body.companyPhone || null;
   if (body.breakdownType !== undefined) update.breakdownType = body.breakdownType;
   if (body.paymentMethod !== undefined) update.paymentMethod = body.paymentMethod;
   if (body.amount !== undefined) update.amount = String(body.amount);

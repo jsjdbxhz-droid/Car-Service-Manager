@@ -35,6 +35,8 @@ export default function Register() {
           username: res.user.username,
           role: res.user.role as 'user' | 'owner' | 'admin',
           deviceId: res.user.deviceId || undefined,
+          companyName: res.user.companyName ?? undefined,
+          companyPhone: res.user.companyPhone ?? undefined,
         });
       },
       onError: (err: unknown) => {

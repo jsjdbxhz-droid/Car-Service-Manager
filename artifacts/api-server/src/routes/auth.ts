@@ -88,18 +88,21 @@ router.post("/register", async (req, res) => {
     .returning();
 
   // Return loginCode ONLY in register response — this is the one time it's shown
-  res.status(201).json({
-    user: {
-      id: user.id,
-      username: user.username,
-      loginCode: user.loginCode,
-      role: user.role,
-      deviceId: user.deviceId,
-      createdAt: user.createdAt.toISOString(),
-    },
-    token: signToken(user.id),
-  });
+  res.status(201).json({ user: formatUser(user), token: signToken(user.id) });
 });
+
+function formatUser(user: typeof usersTable.$inferSelect) {
+  return {
+    id: user.id,
+    username: user.username,
+    loginCode: user.loginCode,
+    role: user.role,
+    deviceId: user.deviceId,
+    companyName: user.companyName,
+    companyPhone: user.companyPhone,
+    createdAt: user.createdAt.toISOString(),
+  };
+}
 
 // POST /api/auth/login
 router.post("/login", async (req, res) => {
@@ -121,17 +124,7 @@ router.post("/login", async (req, res) => {
     return;
   }
 
-  res.json({
-    user: {
-      id: user.id,
-      username: user.username,
-      loginCode: user.loginCode,
-      role: user.role,
-      deviceId: user.deviceId,
-      createdAt: user.createdAt.toISOString(),
-    },
-    token: signToken(user.id),
-  });
+  res.json({ user: formatUser(user), token: signToken(user.id) });
 });
 
 // GET /api/auth/me
@@ -148,14 +141,27 @@ router.get("/me", requireAuth, async (req, res) => {
   }
 
   res.json({
-    id: user.id,
-    username: user.username,
-    loginCode: user.loginCode,
-    role: user.role,
-    deviceId: user.deviceId,
+    ...formatUser(user),
     hideFromLeaderboard: user.hideFromLeaderboard,
-    createdAt: user.createdAt.toISOString(),
   });
+});
+
+// PUT /api/auth/company  { companyName, companyPhone }
+router.put("/company", requireAuth, async (req, res) => {
+  const { companyName, companyPhone } = req.body as {
+    companyName?: string;
+    companyPhone?: string;
+  };
+
+  await db
+    .update(usersTable)
+    .set({
+      companyName: companyName?.trim() || null,
+      companyPhone: companyPhone?.trim() || null,
+    })
+    .where(eq(usersTable.id, req.userId!));
+
+  res.json({ ok: true });
 });
 
 // PUT /api/auth/username  { username: string }

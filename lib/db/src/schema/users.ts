@@ -11,6 +11,8 @@ export const usersTable = pgTable("users", {
   hideFromLeaderboard: boolean("hide_from_leaderboard").notNull().default(false),
   isPaid: boolean("is_paid").notNull().default(false),
   kickedAt: timestamp("kicked_at"),
+  companyName: text("company_name"),
+  companyPhone: text("company_phone"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

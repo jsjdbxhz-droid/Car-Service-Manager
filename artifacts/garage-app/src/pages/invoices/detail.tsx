@@ -76,9 +76,14 @@ export default function InvoiceDetail() {
           {/* Header */}
           <div className="flex justify-between items-start border-b-2 border-slate-200 pb-8 mb-8">
             <div>
-              <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">
+              <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-1">
                 {invoice.workshopName}
               </h1>
+              {invoice.companyPhone && (
+                <p className="text-slate-600 font-medium text-base mb-1" dir="ltr">
+                  {invoice.companyPhone}
+                </p>
+              )}
               <p className="text-slate-500 font-medium text-base">
                 {t('invoice.date')}: {new Date(invoice.createdAt).toLocaleDateString('ar-DZ')}
               </p>

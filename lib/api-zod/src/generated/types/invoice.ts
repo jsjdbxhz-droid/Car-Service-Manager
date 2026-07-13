@@ -17,6 +17,8 @@ export interface Invoice {
   carType: string;
   licensePlate: string;
   workshopName: string;
+  /** @nullable */
+  companyPhone?: string | null;
   breakdownType: string;
   paymentMethod: string;
   amount: number;

@@ -214,6 +214,15 @@ const arTranslations: Translations = {
   'voice.filled': 'الحقول المكتملة',
   'voice.done': 'اكتمل الإدخال الصوتي — راجع البيانات وأحفظ',
   'voice.not_supported': 'متصفحك لا يدعم الإدخال الصوتي — يُنصح باستخدام Chrome',
+
+  // Company
+  'company.name': 'اسم الورشة / الشركة',
+  'company.phone': 'رقم هاتف الورشة',
+  'company.setup_title': 'أكمل معلومات ورشتك',
+  'company.setup_desc': 'أضف اسم ورشتك ورقم هاتفها ليظهرا تلقائياً في الفواتير وأوامر الإصلاح',
+  'company.save': 'حفظ',
+  'company.saved': 'تم الحفظ',
+  'company.skip': 'لاحقاً',
 };
 
 const enTranslations: Translations = {
@@ -397,6 +406,15 @@ const enTranslations: Translations = {
   'voice.filled': 'Completed fields',
   'voice.done': 'Voice input complete — review and save',
   'voice.not_supported': 'Your browser doesn\'t support voice input — try Chrome',
+
+  // Company
+  'company.name': 'Workshop / Company Name',
+  'company.phone': 'Workshop Phone',
+  'company.setup_title': 'Complete your workshop info',
+  'company.setup_desc': 'Add your workshop name and phone so they auto-fill in invoices and repair orders',
+  'company.save': 'Save',
+  'company.saved': 'Saved',
+  'company.skip': 'Later',
 };
 
 const frTranslations: Translations = {
@@ -580,6 +598,15 @@ const frTranslations: Translations = {
   'voice.filled': 'Champs complétés',
   'voice.done': 'Saisie vocale terminée — vérifiez et enregistrez',
   'voice.not_supported': 'Votre navigateur ne supporte pas la saisie vocale — essayez Chrome',
+
+  // Company
+  'company.name': 'Nom de l\'atelier / entreprise',
+  'company.phone': 'Téléphone de l\'atelier',
+  'company.setup_title': 'Complétez les infos de votre atelier',
+  'company.setup_desc': 'Ajoutez le nom et le téléphone pour qu\'ils apparaissent automatiquement dans les factures et ordres de réparation',
+  'company.save': 'Enregistrer',
+  'company.saved': 'Enregistré',
+  'company.skip': 'Plus tard',
 };
 
 interface I18nContextType {

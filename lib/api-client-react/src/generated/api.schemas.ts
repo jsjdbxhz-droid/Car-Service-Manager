@@ -24,6 +24,10 @@ export interface User {
   role: UserRole;
   /** @nullable */
   deviceId?: string | null;
+  /** @nullable */
+  companyName?: string | null;
+  /** @nullable */
+  companyPhone?: string | null;
   createdAt: string;
 }
 
@@ -48,6 +52,10 @@ export interface CustomerRecord {
   id: number;
   userId: number;
   username: string;
+  /** @nullable */
+  workshopName?: string | null;
+  /** @nullable */
+  companyPhone?: string | null;
   firstName: string;
   lastName: string;
   breakdownType: string;
@@ -60,6 +68,8 @@ export interface CustomerRecord {
 }
 
 export interface RecordInput {
+  workshopName?: string;
+  companyPhone?: string;
   firstName: string;
   lastName: string;
   breakdownType: string;
@@ -70,6 +80,8 @@ export interface RecordInput {
 }
 
 export interface RecordUpdate {
+  workshopName?: string;
+  companyPhone?: string;
   firstName?: string;
   lastName?: string;
   breakdownType?: string;
@@ -90,6 +102,8 @@ export interface Invoice {
   carType: string;
   licensePlate: string;
   workshopName: string;
+  /** @nullable */
+  companyPhone?: string | null;
   breakdownType: string;
   paymentMethod: string;
   amount: number;
@@ -103,6 +117,7 @@ export interface InvoiceInput {
   carType: string;
   licensePlate: string;
   workshopName: string;
+  companyPhone?: string;
   breakdownType: string;
   paymentMethod: string;
   amount: number;
@@ -115,9 +130,15 @@ export interface InvoiceUpdate {
   carType?: string;
   licensePlate?: string;
   workshopName?: string;
+  companyPhone?: string;
   breakdownType?: string;
   paymentMethod?: string;
   amount?: number;
+}
+
+export interface CompanyInput {
+  companyName?: string;
+  companyPhone?: string;
 }
 
 export interface Stats {
@@ -126,6 +147,10 @@ export interface Stats {
   totalAmount: number;
   recentRecords: CustomerRecord[];
 }
+
+export type UpdateCompany200 = {
+  ok: boolean;
+};
 
 export type ListRecordsParams = {
 search?: string;

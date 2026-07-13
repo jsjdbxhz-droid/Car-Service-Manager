@@ -7,6 +7,7 @@
  */
 
 export * from './authResponse';
+export * from './companyInput';
 export * from './customerRecord';
 export * from './healthStatus';
 export * from './invoice';
@@ -19,5 +20,6 @@ export * from './recordInput';
 export * from './recordUpdate';
 export * from './registerInput';
 export * from './stats';
+export * from './updateCompany200';
 export * from './user';
 export * from './userRole';

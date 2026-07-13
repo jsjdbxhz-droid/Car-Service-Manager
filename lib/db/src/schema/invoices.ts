@@ -12,6 +12,7 @@ export const invoicesTable = pgTable("invoices", {
   carType: text("car_type").notNull(),
   licensePlate: text("license_plate").notNull(),
   workshopName: text("workshop_name").notNull(),
+  companyPhone: text("company_phone"),
   breakdownType: text("breakdown_type").notNull(),
   paymentMethod: text("payment_method").notNull(),
   amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
