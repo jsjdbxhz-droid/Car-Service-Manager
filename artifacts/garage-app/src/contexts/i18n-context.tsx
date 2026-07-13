@@ -52,7 +52,7 @@ const arTranslations: Translations = {
   // Records
   'records.title': 'سجلات الزبائن',
   'records.search': 'بحث...',
-  'records.add_new': 'إضافة استمارة',
+  'records.add_new': 'إضافة أمر إصلاح',
   'records.edit': 'تعديل الاستمارة',
   'records.delete': 'حذف',
   'records.save': 'حفظ الاستمارة',
@@ -257,7 +257,7 @@ const enTranslations: Translations = {
 
   'records.title': 'Customer Records',
   'records.search': 'Search...',
-  'records.add_new': 'Add Form',
+  'records.add_new': 'Add Repair Order',
   'records.edit': 'Edit Record',
   'records.delete': 'Delete',
   'records.save': 'Save Record',
@@ -440,7 +440,7 @@ const frTranslations: Translations = {
 
   'records.title': 'Dossiers Clients',
   'records.search': 'Recherche...',
-  'records.add_new': 'Nouveau Formulaire',
+  'records.add_new': 'Ajouter un ordre de réparation',
   'records.edit': 'Modifier Dossier',
   'records.delete': 'Supprimer',
   'records.save': 'Enregistrer',
