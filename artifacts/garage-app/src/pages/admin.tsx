@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, LogIn, Users, FileText, Copy, Check, Lock, Eye, EyeOff, AlertTriangle, RefreshCw, ShieldCheck, ShieldOff, UserX, UserCheck } from 'lucide-react';
+import { Search, LogIn, Users, FileText, Copy, Check, Lock, Eye, EyeOff, AlertTriangle, RefreshCw, ShieldCheck, ShieldOff, UserX, UserCheck, BadgeCheck, BadgeX } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 function getApiBase() {
@@ -27,6 +27,39 @@ async function callKick(userId: number, token: string, unkick = false) {
   });
   if (!res.ok) throw new Error('Failed');
   return res.json() as Promise<{ ok: boolean }>;
+}
+
+async function callSetPaid(userId: number, token: string, paid: boolean) {
+  const res = await fetch(`${getApiBase()}/api/admin/users/${userId}/set-paid`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ paid }),
+  });
+  if (!res.ok) throw new Error('Failed');
+  return res.json() as Promise<{ ok: boolean }>;
+}
+
+function timeAgo(dateStr: string, lang: string): string {
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (diff < 60) return lang === 'ar' ? 'الآن' : lang === 'fr' ? 'à l\'instant' : 'just now';
+  if (diff < 3600) {
+    const m = Math.floor(diff / 60);
+    return lang === 'ar' ? `منذ ${m} دقيقة` : lang === 'fr' ? `il y a ${m} min` : `${m}m ago`;
+  }
+  if (diff < 86400) {
+    const h = Math.floor(diff / 3600);
+    return lang === 'ar' ? `منذ ${h} ساعة` : lang === 'fr' ? `il y a ${h}h` : `${h}h ago`;
+  }
+  if (diff < 2592000) {
+    const d = Math.floor(diff / 86400);
+    return lang === 'ar' ? `منذ ${d} يوم` : lang === 'fr' ? `il y a ${d}j` : `${d}d ago`;
+  }
+  if (diff < 31536000) {
+    const mo = Math.floor(diff / 2592000);
+    return lang === 'ar' ? `منذ ${mo} شهر` : lang === 'fr' ? `il y a ${mo} mois` : `${mo}mo ago`;
+  }
+  const y = Math.floor(diff / 31536000);
+  return lang === 'ar' ? `منذ ${y} سنة` : lang === 'fr' ? `il y a ${y} an` : `${y}y ago`;
 }
 
 async function callImpersonate(userId: number, token: string) {
@@ -277,22 +310,26 @@ type AdminUser = {
   loginCode: string;
   role: string;
   deviceId: string | null;
+  isPaid: boolean;
   kickedAt: string | null;
   createdAt: string;
 };
 
 export default function OwnerPanel() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { session, impersonate } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
   const [search, setSearch] = useState('');
+  const [paidFilter, setPaidFilter] = useState<'all' | 'paid' | 'unpaid'>('all');
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'records' | 'invoices'>('records');
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [kickingId, setKickingId] = useState<number | null>(null);
+  const [paidingId, setPaidingId] = useState<number | null>(null);
   const [localKickedAt, setLocalKickedAt] = useState<Record<number, string | null>>({});
+  const [localIsPaid, setLocalIsPaid] = useState<Record<number, boolean>>({});
 
   const { data: rawUsers, isLoading: usersLoading } = useAdminListUsers();
   const users = rawUsers as AdminUser[] | undefined;
@@ -307,9 +344,13 @@ export default function OwnerPanel() {
     { query: { enabled: !!selectedUserId, queryKey: ['admin', 'user-invoices', selectedUserId] } }
   );
 
-  const filteredUsers = (users || []).filter((u) =>
-    !search || u.username.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredUsers = (users || []).filter((u) => {
+    if (search && !u.username.toLowerCase().includes(search.toLowerCase())) return false;
+    const isPaid = localIsPaid[u.id] !== undefined ? localIsPaid[u.id] : u.isPaid;
+    if (paidFilter === 'paid' && !isPaid) return false;
+    if (paidFilter === 'unpaid' && isPaid) return false;
+    return true;
+  });
 
   const selectedUser = users?.find((u) => u.id === selectedUserId);
 
@@ -324,6 +365,20 @@ export default function OwnerPanel() {
       toast({ title: t('msg.error'), variant: 'destructive' });
     } finally {
       setKickingId(null);
+    }
+  };
+
+  const handleSetPaid = async (userId: number, currentPaid: boolean) => {
+    if (!session?.token) return;
+    setPaidingId(userId);
+    try {
+      await callSetPaid(userId, session.token, !currentPaid);
+      setLocalIsPaid((prev) => ({ ...prev, [userId]: !currentPaid }));
+      toast({ title: !currentPaid ? t('owner.paid_success') : t('owner.unpaid_success') });
+    } catch {
+      toast({ title: t('msg.error'), variant: 'destructive' });
+    } finally {
+      setPaidingId(null);
     }
   };
 
@@ -376,6 +431,26 @@ export default function OwnerPanel() {
                 className="ps-9 h-9 text-sm"
               />
             </div>
+            {/* Paid / Unpaid filter tabs */}
+            <div className="flex gap-1 mt-2">
+              {(['all', 'paid', 'unpaid'] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setPaidFilter(f)}
+                  className={`flex-1 py-1 text-xs rounded-md font-medium transition-colors ${
+                    paidFilter === f
+                      ? f === 'paid'
+                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                        : f === 'unpaid'
+                          ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                          : 'bg-primary/10 text-primary'
+                      : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {f === 'all' ? t('owner.filter_all') : f === 'paid' ? t('owner.filter_paid') : t('owner.filter_unpaid')}
+                </button>
+              ))}
+            </div>
           </CardHeader>
           <CardContent className="p-0 overflow-y-auto flex-1">
             {usersLoading ? (
@@ -386,7 +461,13 @@ export default function OwnerPanel() {
               <p className="p-6 text-center text-slate-400 text-sm">{t('owner.no_users')}</p>
             ) : (
               <ul className="divide-y divide-slate-100 dark:divide-slate-800">
-                {filteredUsers.map((user) => (
+                {filteredUsers.map((user) => {
+                  const isKicked = localKickedAt[user.id] !== undefined
+                    ? localKickedAt[user.id] !== null
+                    : user.kickedAt !== null;
+                  const isPaidNow = localIsPaid[user.id] !== undefined ? localIsPaid[user.id] : user.isPaid;
+                  const isOwnerUser = (user.role as string) === 'owner' || (user.role as string) === 'admin';
+                  return (
                   <li
                     key={user.id}
                     onClick={() => setSelectedUserId(user.id)}
@@ -397,11 +478,24 @@ export default function OwnerPanel() {
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="font-bold text-base text-slate-900 dark:text-white truncate">{user.username}</p>
+                      <div className="min-w-0 flex-1">
+                        {/* Name + paid badge */}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="font-bold text-base text-slate-900 dark:text-white truncate">{user.username}</p>
+                          <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0 ${
+                            isPaidNow
+                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                              : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                          }`}>
+                            {isPaidNow ? <BadgeCheck className="w-2.5 h-2.5" /> : <BadgeX className="w-2.5 h-2.5" />}
+                            {isPaidNow ? t('owner.paid') : t('owner.unpaid')}
+                          </span>
+                        </div>
+                        {/* Role */}
                         <p className="text-xs text-slate-400 mt-0.5">
-                          {(user.role as string) === 'owner' || (user.role as string) === 'admin' ? '👑 أونر' : '👤 مستخدم'}
+                          {isOwnerUser ? '👑 أونر' : '👤 مستخدم'}
                         </p>
+                        {/* Login code + copy */}
                         <div className="flex items-center gap-1.5 mt-1">
                           <span className="font-mono text-xs text-slate-500 dark:text-slate-400 tracking-wider" dir="ltr">
                             {user.loginCode}
@@ -416,18 +510,33 @@ export default function OwnerPanel() {
                             }
                           </button>
                         </div>
+                        {/* Registration date + time ago */}
+                        <p className="text-[10px] text-slate-400 mt-0.5" dir="ltr">
+                          {new Date(user.createdAt).toLocaleDateString()} · {timeAgo(user.createdAt, language)}
+                        </p>
                       </div>
-                      <div className="flex gap-1">
-                        {(() => {
-                          const isKicked = localKickedAt[user.id] !== undefined
-                            ? localKickedAt[user.id] !== null
-                            : user.kickedAt !== null;
-                          const isOwnerUser = (user.role as string) === 'owner' || (user.role as string) === 'admin';
-                          return !isOwnerUser ? (
+                      <div className="flex flex-col gap-1">
+                        {/* Paid toggle button (shown for all users) */}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className={`h-7 px-2 text-xs shrink-0 ${isPaidNow ? 'text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-900/20' : 'text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20'}`}
+                          onClick={(e) => { e.stopPropagation(); void handleSetPaid(user.id, isPaidNow); }}
+                          disabled={paidingId === user.id}
+                        >
+                          {paidingId === user.id
+                            ? <RefreshCw className="w-3 h-3 animate-spin" />
+                            : isPaidNow
+                              ? <><BadgeX className="w-3 h-3 me-1" />{t('owner.set_unpaid')}</>
+                              : <><BadgeCheck className="w-3 h-3 me-1" />{t('owner.set_paid')}</>
+                          }
+                        </Button>
+                        {/* Kick/Unkick — hidden for owner/admin */}
+                        {!isOwnerUser ? (
                             <Button
                               size="sm"
                               variant="outline"
-                              className={`h-7 px-2 text-xs shrink-0 ${isKicked ? 'text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-900/20' : 'text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20'}`}
+                              className={`h-7 px-2 text-xs shrink-0 ${isKicked ? 'text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-900/20' : 'text-orange-600 border-orange-200 hover:bg-orange-50 dark:border-orange-800 dark:hover:bg-orange-900/20'}`}
                               onClick={(e) => { e.stopPropagation(); void handleKick(user.id, isKicked); }}
                               disabled={kickingId === user.id}
                             >
@@ -438,8 +547,7 @@ export default function OwnerPanel() {
                                   : <><UserX className="w-3 h-3 me-1" />{t('owner.kick')}</>
                               }
                             </Button>
-                          ) : null;
-                        })()}
+                          ) : null}
                         <Button
                           size="sm"
                           variant="outline"
@@ -452,7 +560,8 @@ export default function OwnerPanel() {
                       </div>
                     </div>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             )}
           </CardContent>

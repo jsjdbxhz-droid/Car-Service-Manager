@@ -30,6 +30,7 @@ router.get("/users", requireAdmin, async (req, res) => {
       loginCode: u.loginCode,
       role: u.role,
       deviceId: u.deviceId,
+      isPaid: u.isPaid,
       kickedAt: u.kickedAt ? u.kickedAt.toISOString() : null,
       createdAt: u.createdAt.toISOString(),
     }))
@@ -72,6 +73,18 @@ router.post("/users/:id/kick", requireAdmin, async (req, res) => {
 router.post("/users/:id/unkick", requireAdmin, async (req, res) => {
   const targetId = parseInt(req.params["id"] as string, 10);
   await db.update(usersTable).set({ kickedAt: null }).where(eq(usersTable.id, targetId));
+  res.json({ ok: true });
+});
+
+// POST /api/admin/users/:id/set-paid  { paid: boolean }
+router.post("/users/:id/set-paid", requireAdmin, async (req, res) => {
+  const targetId = parseInt(req.params["id"] as string, 10);
+  const { paid } = req.body as { paid: boolean };
+  if (typeof paid !== "boolean") {
+    res.status(400).json({ error: "paid must be boolean" });
+    return;
+  }
+  await db.update(usersTable).set({ isPaid: paid }).where(eq(usersTable.id, targetId));
   res.json({ ok: true });
 });
 

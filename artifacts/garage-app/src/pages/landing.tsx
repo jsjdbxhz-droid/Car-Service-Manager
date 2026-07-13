@@ -4,10 +4,41 @@ import { useI18n } from '@/contexts/i18n-context';
 import { useAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Wrench, AlertCircle, Loader2 } from 'lucide-react';
+import { Wrench, AlertCircle, Loader2, ShoppingCart } from 'lucide-react';
 
 function getApiBase() {
   return ((import.meta.env.BASE_URL as string | undefined) ?? '').replace(/\/$/, '');
+}
+
+function KickedScreen() {
+  const { t } = useI18n();
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
+      <div className="w-full max-w-md bg-white dark:bg-slate-900 shadow-xl rounded-xl p-8 border border-red-100 dark:border-red-900 text-center">
+        <div className="flex justify-center mb-6">
+          <div className="bg-red-100 dark:bg-red-900/30 p-4 rounded-full">
+            <ShoppingCart className="w-12 h-12 text-red-500" />
+          </div>
+        </div>
+        <h1 className="text-2xl font-black text-slate-900 dark:text-white mb-3">
+          {t('auth.kicked_title')}
+        </h1>
+        <p className="text-slate-500 dark:text-slate-400 mb-6 text-base leading-relaxed">
+          {t('auth.kicked_subtitle')}
+        </p>
+        <Button
+          variant="outline"
+          className="w-full text-slate-600"
+          onClick={() => {
+            localStorage.removeItem('garage_kicked');
+            window.location.reload();
+          }}
+        >
+          {t('auth.kicked_back')}
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 export default function Landing() {
@@ -17,6 +48,10 @@ export default function Landing() {
   const [, setLocation] = useLocation();
   const { t } = useI18n();
   const { passGateway } = useAuth();
+
+  // Show re-purchase screen if user was kicked
+  const isKicked = localStorage.getItem('garage_kicked') === '1';
+  if (isKicked) return <KickedScreen />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

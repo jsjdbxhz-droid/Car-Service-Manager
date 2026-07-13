@@ -114,6 +114,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           headers: { Authorization: `Bearer ${session.token}` },
         });
         if (res.status === 401) {
+          let isKicked = false;
+          try {
+            const body = await res.json() as { error?: string };
+            if (body.error === 'kicked') isKicked = true;
+          } catch { /* ignore parse error */ }
+          if (isKicked) localStorage.setItem('garage_kicked', '1');
           localStorage.removeItem(AUTH_KEY);
           localStorage.removeItem(ORIGINAL_AUTH_KEY);
           localStorage.removeItem(GATEWAY_KEY);
