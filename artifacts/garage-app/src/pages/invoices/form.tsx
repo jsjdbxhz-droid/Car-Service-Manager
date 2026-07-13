@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation, useParams } from 'wouter';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,7 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowRight, ArrowLeft } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Printer, Save, X } from 'lucide-react';
 
 const formSchema = z.object({
   firstName: z.string().min(1, 'Required'),
@@ -83,10 +83,14 @@ export default function InvoiceForm() {
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     if (isEdit) {
       updateMutation.mutate({ id: id as number, data: values }, {
-        onSuccess: () => {
+        onSuccess: (res) => {
           toast({ title: t('msg.success') });
           queryClient.invalidateQueries({ queryKey: getListInvoicesQueryKey() });
-          setLocation('/invoices');
+          if (printAfterSave.current) {
+            setLocation(`/invoices/${res.id}`);
+          } else {
+            setLocation('/invoices');
+          }
         },
         onError: () => toast({ title: t('msg.error'), variant: 'destructive' })
       });
@@ -95,8 +99,11 @@ export default function InvoiceForm() {
         onSuccess: (res) => {
           toast({ title: t('msg.success') });
           queryClient.invalidateQueries({ queryKey: getListInvoicesQueryKey() });
-          // Redirect to print view instead of list
-          setLocation(`/invoices/${res.id}`);
+          if (printAfterSave.current) {
+            setLocation(`/invoices/${res.id}`);
+          } else {
+            setLocation('/invoices');
+          }
         },
         onError: () => toast({ title: t('msg.error'), variant: 'destructive' })
       });
@@ -104,6 +111,7 @@ export default function InvoiceForm() {
   };
 
   const isPending = createMutation.isPending || updateMutation.isPending;
+  const printAfterSave = useRef(false);
 
   if (isEdit && isLoading) return <div>Loading...</div>;
 
@@ -246,9 +254,37 @@ export default function InvoiceForm() {
               )}
             />
 
-            <Button type="submit" className="w-full h-12" disabled={isPending}>
-              {isPending ? '...' : (isEdit ? t('invoices.save') : t('invoices.save') + " & " + t('invoices.print'))}
-            </Button>
+            <div className="flex gap-3 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1 h-12"
+                onClick={() => setLocation('/invoices')}
+                disabled={isPending}
+              >
+                <X className="w-4 h-4 me-2" />
+                {t('msg.cancel')}
+              </Button>
+              <Button
+                type="submit"
+                variant="outline"
+                className="flex-1 h-12 border-slate-400"
+                disabled={isPending}
+                onClick={() => { printAfterSave.current = false; }}
+              >
+                <Save className="w-4 h-4 me-2" />
+                {isPending && !printAfterSave.current ? '...' : t('invoices.save')}
+              </Button>
+              <Button
+                type="submit"
+                className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-700 text-white"
+                disabled={isPending}
+                onClick={() => { printAfterSave.current = true; }}
+              >
+                <Printer className="w-4 h-4 me-2" />
+                {isPending && printAfterSave.current ? '...' : t('invoices.print')}
+              </Button>
+            </div>
           </form>
         </Form>
       </div>

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation, useParams } from 'wouter';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,7 +23,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowRight, ArrowLeft, CalendarDays } from 'lucide-react';
+import { ArrowRight, ArrowLeft, CalendarDays, Printer, Save, X } from 'lucide-react';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 function todayIso() {
@@ -132,7 +132,11 @@ export default function RecordForm() {
         onSuccess: () => {
           toast({ title: t('msg.success') });
           void queryClient.invalidateQueries({ queryKey: getListRecordsQueryKey() });
-          setLocation('/records');
+          if (printAfterSave.current) {
+            setTimeout(() => window.print(), 300);
+          } else {
+            setLocation('/records');
+          }
         },
         onError: () => toast({ title: t('msg.error'), variant: 'destructive' }),
       });
@@ -141,7 +145,11 @@ export default function RecordForm() {
         onSuccess: () => {
           toast({ title: t('msg.success') });
           void queryClient.invalidateQueries({ queryKey: getListRecordsQueryKey() });
-          setLocation('/records');
+          if (printAfterSave.current) {
+            setTimeout(() => window.print(), 300);
+          } else {
+            setLocation('/records');
+          }
         },
         onError: () => toast({ title: t('msg.error'), variant: 'destructive' }),
       });
@@ -149,6 +157,7 @@ export default function RecordForm() {
   };
 
   const isPending = createMutation.isPending || updateMutation.isPending;
+  const printAfterSave = useRef(false);
 
   if (isEdit && isLoading) return <div className="p-8 text-center text-slate-400">...</div>;
 
@@ -344,10 +353,27 @@ export default function RecordForm() {
                 onClick={() => setLocation('/records')}
                 disabled={isPending}
               >
+                <X className="w-4 h-4 me-2" />
                 {t('msg.cancel')}
               </Button>
-              <Button type="submit" className="flex-1 h-12 text-base font-bold" disabled={isPending}>
-                {isPending ? '...' : t('records.save')}
+              <Button
+                type="submit"
+                variant="outline"
+                className="flex-1 h-12 border-slate-400"
+                disabled={isPending}
+                onClick={() => { printAfterSave.current = false; }}
+              >
+                <Save className="w-4 h-4 me-2" />
+                {isPending && !printAfterSave.current ? '...' : t('records.save')}
+              </Button>
+              <Button
+                type="submit"
+                className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-700 text-white"
+                disabled={isPending}
+                onClick={() => { printAfterSave.current = true; }}
+              >
+                <Printer className="w-4 h-4 me-2" />
+                {isPending && printAfterSave.current ? '...' : t('invoices.print')}
               </Button>
             </div>
 
