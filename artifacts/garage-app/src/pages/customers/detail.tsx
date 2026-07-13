@@ -43,7 +43,7 @@ function formatDate(isoStr: string, lang: string) {
   return `${day} ${month} ${year}`;
 }
 
-type Record = {
+type RepairRecord = {
   id: number;
   firstName: string;
   lastName: string;
@@ -79,7 +79,7 @@ export default function CustomerDetail() {
 
   const base = ((import.meta.env.BASE_URL as string | undefined) ?? '').replace(/\/$/, '');
 
-  const { data: records, isLoading } = useQuery<Record[]>({
+  const { data: records, isLoading } = useQuery<RepairRecord[]>({
     queryKey: ['customer-records', firstName, lastName, deviceId, appliedDate],
     queryFn: async () => {
       const qp = new URLSearchParams({ firstName, lastName });

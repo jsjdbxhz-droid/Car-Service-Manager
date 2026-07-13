@@ -62,7 +62,7 @@ export default function InvoiceCustomerDetail() {
   const [appliedDate, setAppliedDate] = useState('');
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  const { editSecretOpen, editTarget, requestEdit, closeEditSecret, confirmEdit } = useEditSecret();
+  const { editSecretOpen, requestEdit, closeEditSecret, confirmEdit } = useEditSecret();
 
   const base = ((import.meta.env.BASE_URL as string | undefined) ?? '').replace(/\/$/, '');
 
