@@ -148,11 +148,23 @@ export default function InvoiceDetail() {
 
       <style>{`
         @media print {
-          @page { margin: 0; size: A4 portrait; }
+          @page { margin: 0.8cm; size: A4 portrait; }
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white !important; }
-          #root > div > main > header,
-          #root > div > aside { display: none !important; }
-          #root > div > main { margin: 0 !important; padding: 0 !important; }
+
+          /* Hide navigation */
+          aside, header, nav { display: none !important; }
+
+          /* Fix overflow clipping — this is why content was cut off */
+          html, body { overflow: visible !important; height: auto !important; }
+          main {
+            margin-inline-start: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+            height: auto !important;
+            display: block !important;
+          }
+          main > * { overflow: visible !important; height: auto !important; }
+          main > div { padding: 0 !important; overflow: visible !important; height: auto !important; }
         }
       `}</style>
     </div>
