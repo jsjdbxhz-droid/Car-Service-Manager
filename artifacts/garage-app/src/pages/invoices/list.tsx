@@ -91,7 +91,7 @@ export default function InvoicesList() {
           className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
         >
           <Users className="w-4 h-4" />
-          {t('records.view')}
+          {t('nav.records')}
         </button>
         <button className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold bg-primary text-primary-foreground border-s border-slate-200 dark:border-slate-700">
           <FileText className="w-4 h-4" />
@@ -137,11 +137,15 @@ export default function InvoicesList() {
           )}
         </div>
 
-        {/* Add button */}
-        <div className="shrink-0">
-          <Button type="button" onClick={() => setLocation('/invoices/new')} className="h-10 font-semibold">
+        {/* Add buttons */}
+        <div className="flex gap-2 shrink-0">
+          <Button type="button" variant="outline" onClick={() => setLocation('/invoices/new')} className="h-10 font-semibold">
             <Plus className="w-4 h-4 me-1.5" />
             {t('invoices.add_new')}
+          </Button>
+          <Button type="button" onClick={() => setLocation('/invoices/new')} className="h-10 font-semibold">
+            <Plus className="w-4 h-4 me-1.5" />
+            {t('customers.add_new')}
           </Button>
         </div>
       </form>
