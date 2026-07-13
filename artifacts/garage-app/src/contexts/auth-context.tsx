@@ -105,6 +105,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [checkRevision]);
 
+  // Poll /api/auth/me every 30s to detect if the user was kicked
+  useEffect(() => {
+    if (!session) return;
+    const check = async () => {
+      try {
+        const res = await fetch(`${getApiBase()}/api/auth/me`, {
+          headers: { Authorization: `Bearer ${session.token}` },
+        });
+        if (res.status === 401) {
+          localStorage.removeItem(AUTH_KEY);
+          localStorage.removeItem(ORIGINAL_AUTH_KEY);
+          localStorage.removeItem(GATEWAY_KEY);
+          setSession(null);
+          setOriginalSession(null);
+          setGatewayRevision(null);
+        }
+      } catch { /* network error — keep current state */ }
+    };
+    const id = setInterval(() => { void check(); }, 30_000);
+    return () => clearInterval(id);
+  }, [session]);
+
   const passGateway = (revision: number) => {
     localStorage.setItem(GATEWAY_KEY, String(revision));
     setGatewayRevision(revision);

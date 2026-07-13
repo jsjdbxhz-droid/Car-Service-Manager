@@ -30,6 +30,7 @@ router.get("/users", requireAdmin, async (req, res) => {
       loginCode: u.loginCode,
       role: u.role,
       deviceId: u.deviceId,
+      kickedAt: u.kickedAt ? u.kickedAt.toISOString() : null,
       createdAt: u.createdAt.toISOString(),
     }))
   );
@@ -54,6 +55,24 @@ router.post("/users/:id/impersonate", requireAdmin, async (req, res) => {
       createdAt: user.createdAt.toISOString(),
     },
   });
+});
+
+// POST /api/admin/users/:id/kick
+router.post("/users/:id/kick", requireAdmin, async (req, res) => {
+  const targetId = parseInt(req.params["id"] as string, 10);
+  if (targetId === req.userId) {
+    res.status(400).json({ error: "Cannot kick yourself" });
+    return;
+  }
+  await db.update(usersTable).set({ kickedAt: new Date() }).where(eq(usersTable.id, targetId));
+  res.json({ ok: true });
+});
+
+// POST /api/admin/users/:id/unkick
+router.post("/users/:id/unkick", requireAdmin, async (req, res) => {
+  const targetId = parseInt(req.params["id"] as string, 10);
+  await db.update(usersTable).set({ kickedAt: null }).where(eq(usersTable.id, targetId));
+  res.json({ ok: true });
 });
 
 // GET /api/admin/users/:id/records

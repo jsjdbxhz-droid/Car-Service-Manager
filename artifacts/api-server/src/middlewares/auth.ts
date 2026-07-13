@@ -30,6 +30,10 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       res.status(401).json({ error: "User not found" });
       return;
     }
+    if (user.kickedAt) {
+      res.status(401).json({ error: "kicked" });
+      return;
+    }
     req.userId = user.id;
     req.userRole = user.role;
     next();

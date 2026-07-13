@@ -9,6 +9,7 @@ export const usersTable = pgTable("users", {
   role: text("role").notNull().default("user"),
   deviceId: text("device_id"),
   hideFromLeaderboard: boolean("hide_from_leaderboard").notNull().default(false),
+  kickedAt: timestamp("kicked_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

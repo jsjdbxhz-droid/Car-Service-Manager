@@ -12,11 +12,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, LogIn, Users, FileText, Copy, Check, Lock, Eye, EyeOff, AlertTriangle, RefreshCw, ShieldCheck, ShieldOff } from 'lucide-react';
+import { Search, LogIn, Users, FileText, Copy, Check, Lock, Eye, EyeOff, AlertTriangle, RefreshCw, ShieldCheck, ShieldOff, UserX, UserCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 function getApiBase() {
   return ((import.meta.env.BASE_URL as string | undefined) ?? '').replace(/\/$/, '');
+}
+
+async function callKick(userId: number, token: string, unkick = false) {
+  const action = unkick ? 'unkick' : 'kick';
+  const res = await fetch(`${getApiBase()}/api/admin/users/${userId}/${action}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed');
+  return res.json() as Promise<{ ok: boolean }>;
 }
 
 async function callImpersonate(userId: number, token: string) {
@@ -261,6 +271,16 @@ function EditCodeCard() {
 }
 
 // ── Main Panel ───────────────────────────────────────────────────────────────
+type AdminUser = {
+  id: number;
+  username: string;
+  loginCode: string;
+  role: string;
+  deviceId: string | null;
+  kickedAt: string | null;
+  createdAt: string;
+};
+
 export default function OwnerPanel() {
   const { t } = useI18n();
   const { session, impersonate } = useAuth();
@@ -271,8 +291,11 @@ export default function OwnerPanel() {
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'records' | 'invoices'>('records');
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [kickingId, setKickingId] = useState<number | null>(null);
+  const [localKickedAt, setLocalKickedAt] = useState<Record<number, string | null>>({});
 
-  const { data: users, isLoading: usersLoading } = useAdminListUsers();
+  const { data: rawUsers, isLoading: usersLoading } = useAdminListUsers();
+  const users = rawUsers as AdminUser[] | undefined;
 
   const { data: records, isLoading: recordsLoading } = useAdminGetUserRecords(
     selectedUserId as number,
@@ -289,6 +312,20 @@ export default function OwnerPanel() {
   );
 
   const selectedUser = users?.find((u) => u.id === selectedUserId);
+
+  const handleKick = async (userId: number, isKicked: boolean) => {
+    if (!session?.token) return;
+    setKickingId(userId);
+    try {
+      await callKick(userId, session.token, isKicked);
+      setLocalKickedAt((prev) => ({ ...prev, [userId]: isKicked ? null : new Date().toISOString() }));
+      toast({ title: isKicked ? t('owner.unkick_success') : t('owner.kick_success') });
+    } catch {
+      toast({ title: t('msg.error'), variant: 'destructive' });
+    } finally {
+      setKickingId(null);
+    }
+  };
 
   const handleImpersonate = async (userId: number) => {
     if (!session?.token) return;
@@ -380,15 +417,39 @@ export default function OwnerPanel() {
                           </button>
                         </div>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 px-2 text-xs shrink-0"
-                        onClick={(e) => { e.stopPropagation(); void handleImpersonate(user.id); }}
-                      >
-                        <LogIn className="w-3 h-3 me-1" />
-                        {t('owner.enter_as')}
-                      </Button>
+                      <div className="flex gap-1">
+                        {(() => {
+                          const isKicked = localKickedAt[user.id] !== undefined
+                            ? localKickedAt[user.id] !== null
+                            : user.kickedAt !== null;
+                          const isOwnerUser = (user.role as string) === 'owner' || (user.role as string) === 'admin';
+                          return !isOwnerUser ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className={`h-7 px-2 text-xs shrink-0 ${isKicked ? 'text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-900/20' : 'text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20'}`}
+                              onClick={(e) => { e.stopPropagation(); void handleKick(user.id, isKicked); }}
+                              disabled={kickingId === user.id}
+                            >
+                              {kickingId === user.id
+                                ? <RefreshCw className="w-3 h-3 animate-spin" />
+                                : isKicked
+                                  ? <><UserCheck className="w-3 h-3 me-1" />{t('owner.unkick')}</>
+                                  : <><UserX className="w-3 h-3 me-1" />{t('owner.kick')}</>
+                              }
+                            </Button>
+                          ) : null;
+                        })()}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 px-2 text-xs shrink-0"
+                          onClick={(e) => { e.stopPropagation(); void handleImpersonate(user.id); }}
+                        >
+                          <LogIn className="w-3 h-3 me-1" />
+                          {t('owner.enter_as')}
+                        </Button>
+                      </div>
                     </div>
                   </li>
                 ))}
